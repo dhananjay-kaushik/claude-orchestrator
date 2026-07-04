@@ -9,9 +9,9 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 33
+- **NOT_DONE**: 32
 - **IN_PROGRESS**: 0
-- **DONE**: 24
+- **DONE**: 25
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -244,7 +244,7 @@ This project must be built with a test-driven development approach. For every pa
   - It must not tell Claude to commit changes during task execution.
   - It should tell Claude generated plans must be machine-parseable by the orchestrator before execution.
 
-- [-] Add command tests for `plan` behavior.
+- [x] Add command tests for `plan` behavior.
   - Test prompt construction with configured plan directory.
   - Test model selection is passed through.
   - Test non-zero Claude exits are handled.
