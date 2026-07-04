@@ -9,9 +9,9 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 49
+- **NOT_DONE**: 47
 - **IN_PROGRESS**: 0
-- **DONE**: 8
+- **DONE**: 10
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -114,7 +114,7 @@ This project must be built with a test-driven development approach. For every pa
 
 ## Phase 2: Configuration Schema, CLI Commands & Runtime Defaults
 
-- [ ] Freeze the MVP `.claude-orchestrator.json` contract before implementation.
+- [x] Freeze the MVP `.claude-orchestrator.json` contract before implementation.
   - `version`: required config schema version.
   - `planDir`: project-relative directory containing generated plans.
   - `baseBranch`: default branch to branch or worktree from.
@@ -140,7 +140,7 @@ This project must be built with a test-driven development approach. For every pa
   - `security.allowNetwork`: reserved for future network-aware command policy.
   - `notifications`: post-MVP only; rejected or ignored by MVP execution logic.
 
-- [ ] Freeze the structured command shape.
+- [x] Freeze the structured command shape.
   - Verification commands must be objects, never shell strings.
   - Required fields: `command`, `args`, and `timeoutMs`.
   - Optional fields: `name`, `cwd`, `env`, and `allowFailure`.
