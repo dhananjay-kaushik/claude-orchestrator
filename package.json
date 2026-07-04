@@ -1,0 +1,30 @@
+{
+  "name": "claude-orchestrator",
+  "version": "0.1.0",
+  "description": "Stateful Workflow Engine on top of Claude Code",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "claude-orchestrator": "bin/claude-orchestrator.js"
+  },
+  "scripts": {
+    "build": "echo 'Build script not implemented'",
+    "typecheck": "echo 'Typecheck script not implemented'",
+    "lint": "echo 'Lint script not implemented'",
+    "format": "echo 'Format script not implemented'",
+    "test": "echo 'Test script not implemented'"
+  },
+  "keywords": [
+    "claude",
+    "orchestrator",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
