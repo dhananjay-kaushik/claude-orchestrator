@@ -1,3 +1,3 @@
-export * from './schema';
-export * from './defaults';
-export * from './loader';
+export * from './schema.js';
+export * from './defaults.js';
+export * from './loader.js';

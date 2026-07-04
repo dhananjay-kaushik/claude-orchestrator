@@ -32,6 +32,7 @@ program
   });
 
 import { runPlanCommand } from './commands/plan.js';
+import { runCommand } from './commands/run.js';
 
 program
   .command('plan')
@@ -49,8 +50,9 @@ program
   .option('--task <id>', 'stable ID of a specific task to run')
   .option('--loop', 'optional explicit loop mode; never implicit')
   .option('--dry-run', 'show intended execution without mutating state')
-  .action(() => {
-    // To be implemented
+  .action(async (options) => {
+    const parentOpts = program.opts();
+    await runCommand({ ...options, config: parentOpts.config });
   });
 
 program

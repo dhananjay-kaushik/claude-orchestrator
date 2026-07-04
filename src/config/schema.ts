@@ -10,7 +10,7 @@ export const verificationCommandSchema = z.object({
     .max(3600000, 'Verification command timeout cannot exceed 1 hour'),
   name: z.string().optional(),
   cwd: z.string().optional(),
-  env: z.record(z.string()).optional(),
+  env: z.record(z.string(), z.string()).optional(),
   allowFailure: z.boolean().optional(),
 });
 

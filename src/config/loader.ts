@@ -1,7 +1,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { configSchema, ConfigSchemaType } from './schema';
-import { defaultConfig } from './defaults';
+import { configSchema, ConfigSchemaType } from './schema.js';
+import { defaultConfig } from './defaults.js';
 import { ZodError } from 'zod';
 
 function deepMerge(target: any, source: any): any {

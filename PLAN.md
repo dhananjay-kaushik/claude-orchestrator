@@ -9,8 +9,8 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 32
-- **IN_PROGRESS**: 0
+- **NOT_DONE**: 31
+- **IN_PROGRESS**: 1
 - **DONE**: 25
 - **FAILED**: 0
 - **BLOCKED**: 0
@@ -252,7 +252,7 @@ This project must be built with a test-driven development approach. For every pa
 
 ## Phase 4: Plan Parser, State Model & Safe Markdown Updates
 
-- [ ] Implement `run` command plan discovery.
+- [-] Implement `run` command plan discovery.
   - Scan the configured `planDir` for `.md` files.
   - Present an interactive selector.
   - Show useful metadata where available, such as last modified time and remaining task count.

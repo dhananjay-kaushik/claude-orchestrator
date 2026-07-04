@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { configSchema, verificationCommandSchema } from './schema';
+import { configSchema, verificationCommandSchema } from './schema.js';
 
 describe('configSchema', () => {
   it('validates a complete valid config', () => {

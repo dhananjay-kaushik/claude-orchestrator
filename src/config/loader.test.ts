@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { loadConfig } from './loader';
+import { loadConfig } from './loader.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
