@@ -66,7 +66,9 @@ export async function runPlanCommand(options: { plan?: string; config?: string }
     
     p.outro(pc.green('Planning completed successfully.'));
   } catch (error: any) {
-    if (error.exitCode !== undefined && error.exitCode !== 0) {
+    if (error.signal === 'SIGINT' || error.isCanceled) {
+      p.outro(pc.yellow('Planning interrupted.'));
+    } else if (error.exitCode !== undefined && error.exitCode !== 0) {
       p.outro(pc.yellow(`Claude exited with code ${error.exitCode}. Please check the plan file.`));
     } else {
       p.log.error(pc.red(`Failed to spawn Claude: ${error.message}`));
