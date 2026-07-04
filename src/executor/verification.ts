@@ -76,7 +76,7 @@ export async function runVerification(
       });
 
       const result = await subprocess;
-      exitCode = result.exitCode;
+      exitCode = result.exitCode ?? null;
       success = true;
     } catch (error: any) {
       exitCode = error.exitCode ?? null;

@@ -46,7 +46,7 @@ describe('verification', () => {
         return {
           stdout: { on: vi.fn() },
           stderr: { on: vi.fn() },
-          then: (resolve) => resolve({ exitCode: 0 }),
+          then: (resolve: (v: any) => void) => resolve({ exitCode: 0 }),
           catch: () => {}
         } as any;
       });
@@ -73,8 +73,8 @@ describe('verification', () => {
         return {
           stdout: { on: vi.fn() },
           stderr: { on: vi.fn() },
-          then: (resolve, reject) => reject({ exitCode: 1, message: 'Command failed' }),
-          catch: (reject) => reject({ exitCode: 1, message: 'Command failed' })
+          then: (resolve: (v: any) => void, reject: (e: any) => void) => reject({ exitCode: 1, message: 'Command failed' }),
+          catch: (reject: (e: any) => void) => reject({ exitCode: 1, message: 'Command failed' })
         } as any;
       });
 
@@ -130,8 +130,8 @@ describe('verification', () => {
         return {
           stdout: { on: vi.fn() },
           stderr: { on: vi.fn() },
-          then: (resolve, reject) => reject({ exitCode: 1, message: 'Command failed' }),
-          catch: (reject) => reject({ exitCode: 1, message: 'Command failed' })
+          then: (resolve: (v: any) => void, reject: (e: any) => void) => reject({ exitCode: 1, message: 'Command failed' }),
+          catch: (reject: (e: any) => void) => reject({ exitCode: 1, message: 'Command failed' })
         } as any;
       });
 

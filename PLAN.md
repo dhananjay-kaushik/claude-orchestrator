@@ -9,9 +9,9 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 58
-- **NOT_DONE**: 2
+- **NOT_DONE**: 1
 - **IN_PROGRESS**: 0
-- **DONE**: 56
+- **DONE**: 57
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -567,7 +567,7 @@ This project must be built with a test-driven development approach. For every pa
   - Dangerous override modes are post-MVP.
   - Do not install notification dependencies until the feature is actively implemented.
 
-- [ ] Prepare for npm publishing.
+- [x] Prepare for npm publishing.
   - Add package files whitelist.
   - Add README command examples.
   - Verify executable permissions.
