@@ -10,8 +10,8 @@ This project must be built with a test-driven development approach. For every pa
 
 - **Total**: 57
 - **NOT_DONE**: 13
-- **IN_PROGRESS**: 1
-- **DONE**: 43
+- **IN_PROGRESS**: 0
+- **DONE**: 44
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -448,7 +448,7 @@ This project must be built with a test-driven development approach. For every pa
   - Prompt to initialize Git or halt before branch orchestration.
   - Never assume `main` exists; detect available branches and use config defaults.
 
-- [-] Build branch management utilities.
+- [x] Build branch management utilities.
   - Prompt for branch name with a default derived from the plan name.
   - Sanitize branch names.
   - Confirm base branch.
