@@ -11,7 +11,7 @@ describe('CLI Help & Entry point', () => {
 
   it('the package entry point resolves after build', async () => {
     if (!fs.existsSync(path.resolve(process.cwd(), 'dist/cli.js'))) {
-      await execa('npm', ['run', 'build']);
+      await execa('pnpm', ['run', 'build']);
     }
     const { stdout } = await execa('node', ['./bin/claude-orchestrator.js', '--help'], {
       env: { VITEST: '', NODE_ENV: 'development' },
