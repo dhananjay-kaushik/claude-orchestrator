@@ -25,4 +25,9 @@ describe('buildPlanPrompt', () => {
     const prompt = buildPlanPrompt('docs/plans');
     expect(prompt).toContain('Do NOT commit');
   });
+
+  it('should require machine-parseable plans', () => {
+    const prompt = buildPlanPrompt('docs/plans');
+    expect(prompt).toContain('machine-parseable');
+  });
 });

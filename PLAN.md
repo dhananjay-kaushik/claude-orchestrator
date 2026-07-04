@@ -9,9 +9,9 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 34
+- **NOT_DONE**: 33
 - **IN_PROGRESS**: 0
-- **DONE**: 23
+- **DONE**: 24
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -236,7 +236,7 @@ This project must be built with a test-driven development approach. For every pa
   - The command should still catch process exits and restore terminal state cleanly.
   - Non-zero exits should produce a friendly summary and should not leave the CLI in a broken state.
 
-- [ ] Store the plan generation prompt as a source constant.
+- [x] Store the plan generation prompt as a source constant.
   - The prompt should instruct Claude to collaborate with the user.
   - It should require a Markdown plan in the configured plan directory.
   - It should require the 5-state checkbox system.
