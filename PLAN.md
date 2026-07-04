@@ -9,9 +9,9 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 14
+- **NOT_DONE**: 13
 - **IN_PROGRESS**: 1
-- **DONE**: 42
+- **DONE**: 43
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -443,12 +443,12 @@ This project must be built with a test-driven development approach. For every pa
 
 ## Phase 6: Git Branching, Commits & Workspace Safety
 
-- [-] Implement Git repository detection.
+- [x] Implement Git repository detection.
   - Detect when the current project is not a Git repository.
   - Prompt to initialize Git or halt before branch orchestration.
   - Never assume `main` exists; detect available branches and use config defaults.
 
-- [ ] Build branch management utilities.
+- [-] Build branch management utilities.
   - Prompt for branch name with a default derived from the plan name.
   - Sanitize branch names.
   - Confirm base branch.
