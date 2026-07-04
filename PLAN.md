@@ -549,7 +549,7 @@ This project must be built with a test-driven development approach. For every pa
   - On plan completion, include the plan path, final branch, verification status, log directory, and state directory.
   - If every task is `DONE`, clearly tell the user the plan is complete and no further orchestration work remains.
 
-- [ ] Add run report tests.
+- [x] Add run report tests.
   - Test concise terminal overview content.
   - Test detailed log path is included.
   - Test all-done plan overview.

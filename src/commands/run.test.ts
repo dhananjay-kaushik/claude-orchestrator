@@ -6,6 +6,7 @@ import * as execution from '../executor/execution.js';
 import * as loader from '../config/loader.js';
 import * as discovery from '../plans/discovery.js';
 import * as state from '../executor/state.js';
+import * as verification from '../executor/verification.js';
 import * as p from '@clack/prompts';
 
 vi.mock('fs');
@@ -14,6 +15,7 @@ vi.mock('../executor/execution.js');
 vi.mock('../config/loader.js');
 vi.mock('../plans/discovery.js');
 vi.mock('../executor/state.js');
+vi.mock('../executor/verification.js');
 vi.mock('@clack/prompts', () => ({
   intro: vi.fn(),
   outro: vi.fn(),
@@ -52,6 +54,7 @@ describe('runCommand', () => {
       verificationResults: [],
     });
     vi.mocked(state.savePlanState).mockResolvedValue(undefined);
+    vi.mocked(verification.runVerification).mockResolvedValue(null);
   });
 
   it('stops if no executable tasks are found', async () => {
@@ -71,6 +74,86 @@ describe('runCommand', () => {
     expect(mockExit).toHaveBeenCalledWith(0);
 
     mockExit.mockRestore();
+  });
+
+  it('reports blocked plan summary with verification counts', async () => {
+    vi.mocked(parser.parsePlan).mockReturnValue({
+      planId: 'plan1',
+      tasks: [
+        { id: '1', status: 'DONE', originalText: '- [x] task', headingContext: '' },
+        { id: '2', status: 'BLOCKED', originalText: '- [!] task 2', headingContext: '' },
+      ],
+    });
+    vi.mocked(parser.determineNextTask).mockReturnValue(undefined);
+    vi.mocked(state.loadPlanState).mockResolvedValue({
+      planId: 'plan1',
+      tasks: {
+        '1': {
+          id: '1',
+          attempts: 1,
+          lastStatus: 'DONE',
+          logFilePaths: [],
+          claudeExitCodes: [],
+          jsonResponsePaths: [],
+          verificationResults: [{ success: true, durationMs: 1, stdoutPath: '', stderrPath: '' }],
+          totalCostUsd: 0.5,
+          commitHash: 'abc123',
+        },
+        '2': {
+          id: '2',
+          attempts: 1,
+          lastStatus: 'BLOCKED',
+          logFilePaths: [],
+          claudeExitCodes: [],
+          jsonResponsePaths: [],
+          verificationResults: [],
+        },
+      },
+    } as any);
+
+    const mockExit = vi.spyOn(process, 'exit').mockImplementation((() => {}) as any);
+
+    await runCommand({});
+
+    expect(p.log.warn).toHaveBeenCalledWith(expect.stringContaining('Plan is blocked'));
+    expect(p.log.info).toHaveBeenCalledWith('Completed Tasks: 1');
+    expect(p.log.info).toHaveBeenCalledWith('Blocked Tasks:   1');
+    expect(p.log.info).toHaveBeenCalledWith('Verification:    1 passed / 1 not passing');
+    expect(p.log.info).toHaveBeenCalledWith('Total Commits:   1');
+    expect(mockExit).toHaveBeenCalledWith(0);
+
+    mockExit.mockRestore();
+  });
+
+  it('marks task BLOCKED when Claude reports a BLOCKED sentinel', async () => {
+    const mockTask = {
+      id: '2',
+      status: 'NOT_DONE',
+      originalText: '- [ ] task 2',
+      headingContext: '',
+    } as any;
+    vi.mocked(parser.parsePlan).mockReturnValue({ planId: 'plan1', tasks: [mockTask] });
+    vi.mocked(parser.determineNextTask).mockReturnValue(mockTask);
+    vi.mocked(execution.checkClaudeSessionLimits).mockResolvedValue({ limitReached: false });
+    vi.mocked(execution.executeClaudeHeadless).mockResolvedValue({
+      success: true,
+      exitCode: 0,
+      sentinel: { type: 'BLOCKED', reason: 'missing credentials' },
+    });
+    vi.mocked(parser.updateTaskStatus)
+      .mockReturnValueOnce('plan content IN_PROGRESS')
+      .mockReturnValueOnce('plan content BLOCKED');
+
+    await runCommand({});
+
+    expect(parser.updateTaskStatus).toHaveBeenCalledWith(
+      'plan content IN_PROGRESS',
+      mockTask,
+      'BLOCKED',
+    );
+    expect(fs.writeFileSync).toHaveBeenCalledWith('plans/PLAN.md', 'plan content BLOCKED', 'utf8');
+    expect(p.log.warn).toHaveBeenCalledWith(expect.stringContaining('missing credentials'));
+    expect(verification.runVerification).not.toHaveBeenCalled();
   });
 
   it('runs Claude and marks task DONE on success', async () => {
@@ -137,6 +220,39 @@ describe('runCommand', () => {
       'FAILED',
     );
     expect(fs.writeFileSync).toHaveBeenCalledWith('plans/PLAN.md', 'plan content FAILED', 'utf8');
+  });
+
+  it('reports the failing command and truncated output when verification fails', async () => {
+    const mockTask = {
+      id: '2',
+      status: 'NOT_DONE',
+      originalText: '- [ ] task 2',
+      headingContext: '',
+    } as any;
+    vi.mocked(parser.parsePlan).mockReturnValue({ planId: 'plan1', tasks: [mockTask] });
+    vi.mocked(parser.determineNextTask).mockReturnValue(mockTask);
+    vi.mocked(execution.checkClaudeSessionLimits).mockResolvedValue({ limitReached: false });
+    vi.mocked(execution.executeClaudeHeadless).mockResolvedValue({
+      success: true,
+      exitCode: 0,
+      sentinel: { type: 'SUCCESS' },
+    });
+    vi.mocked(verification.runVerification).mockResolvedValue({
+      success: false,
+      exitCode: 1,
+      command: 'npm test',
+      errorOutput: 'boom',
+      stderrPath: '/logs/task-2/stderr.log',
+    } as any);
+    vi.mocked(parser.updateTaskStatus).mockReturnValueOnce('plan content IN_PROGRESS');
+
+    await runCommand({});
+
+    expect(p.log.error).toHaveBeenCalledWith(expect.stringContaining('Failing command: npm test'));
+    expect(p.log.error).toHaveBeenCalledWith(expect.stringContaining('boom'));
+    expect(p.log.info).toHaveBeenCalledWith(
+      expect.stringContaining('Full output: /logs/task-2/stderr.log'),
+    );
   });
 
   it('handles SIGINT gracefully and preserves IN_PROGRESS status', async () => {
