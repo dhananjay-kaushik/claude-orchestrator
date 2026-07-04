@@ -187,7 +187,7 @@ This project must be built with a test-driven development approach. For every pa
   - Validate Claude permission mode and allowed tools before execution.
   - Validate that `--dangerously-skip-permissions` is not present for normal execution.
 
-- [ ] Freeze the MVP CLI command surface.
+- [-] Freeze the MVP CLI command surface.
   - `claude-orchestrator init`: create or update `.claude-orchestrator.json` interactively.
   - `claude-orchestrator doctor`: check Claude binary, auth, Git repo, config validity, command policy, and writable state/log/worktree dirs.
   - `claude-orchestrator validate`: validate config and plan files without executing Claude.
