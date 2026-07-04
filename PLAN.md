@@ -9,9 +9,9 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 41
+- **NOT_DONE**: 37
 - **IN_PROGRESS**: 0
-- **DONE**: 16
+- **DONE**: 20
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -30,7 +30,7 @@ This project must be built with a test-driven development approach. For every pa
   - `DONE` is never taken from Claude output; it is still granted only by orchestrator verification.
   - Store the raw JSON response and parsed sentinel in the per-task state file.
 
-- [ ] Treat Claude permissions as an actual boundary, not just prompt text.
+- [x] Treat Claude permissions as an actual boundary, not just prompt text.
   - Execution must pass explicit Claude permission controls such as `--permission-mode` and/or `--allowedTools` where supported.
   - Do not use `--dangerously-skip-permissions` for normal execution.
   - Run each task in an isolated Git worktree or equivalent sandbox rooted under orchestrator-controlled state.
@@ -39,13 +39,13 @@ This project must be built with a test-driven development approach. For every pa
 
 ## TDD & Safety Principles
 
-- [ ] Follow red-green-refactor for all core behavior.
+- [x] Follow red-green-refactor for all core behavior.
   - Start each implementation task by writing tests for the expected behavior and edge cases.
   - Keep tests close to the module they protect.
   - Prefer small pure functions for parsing, selection, config validation, status transitions, branch naming, and command policy checks.
   - Add integration tests only after unit boundaries are stable.
 
-- [ ] Treat autonomous execution as security-sensitive.
+- [x] Treat autonomous execution as security-sensitive.
   - Default to least privilege.
   - Never run destructive Git commands such as `git reset --hard`, `git clean`, force push, branch deletion, or history rewrite.
   - Never touch files that look like secrets, credentials, private keys, `.env` files, or ignored local config unless the user explicitly opted in.
@@ -187,7 +187,7 @@ This project must be built with a test-driven development approach. For every pa
   - Validate Claude permission mode and allowed tools before execution.
   - Validate that `--dangerously-skip-permissions` is not present for normal execution.
 
-- [-] Freeze the MVP CLI command surface.
+- [x] Freeze the MVP CLI command surface.
   - `claude-orchestrator init`: create or update `.claude-orchestrator.json` interactively.
   - `claude-orchestrator doctor`: check Claude binary, auth, Git repo, config validity, command policy, and writable state/log/worktree dirs.
   - `claude-orchestrator validate`: validate config and plan files without executing Claude.
