@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { 
-  getWorktreeBranchName, 
+import {
+  getWorktreeBranchName,
   promptForDirtyTaskWorktree,
   hasDirtyWorktree,
   createWorktree,
-  removeWorktree
+  removeWorktree,
+  mergeWorktreeBranch
 } from './index.js';
 import * as prompts from '@clack/prompts';
 import { execa } from 'execa';
@@ -134,6 +135,26 @@ describe('Worktree Utilities', () => {
       vi.mocked(branchUtils.hasUncommittedChanges).mockResolvedValueOnce(true); // Dirty
       
       await expect(removeWorktree('/worktree-path', '/cwd')).rejects.toThrow('Cannot automatically delete dirty worktree: /worktree-path');
+      expect(execa).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('mergeWorktreeBranch', () => {
+    it('should checkout base branch and merge task branch', async () => {
+      vi.mocked(branchUtils.hasUncommittedChanges).mockResolvedValueOnce(false); // Clean
+
+      await mergeWorktreeBranch('my-branch', 'main', '/cwd');
+
+      expect(execa).toHaveBeenNthCalledWith(1, 'git', ['checkout', 'main'], expect.any(Object));
+      expect(execa).toHaveBeenNthCalledWith(2, 'git', ['merge', '--no-edit', 'my-branch'], expect.any(Object));
+    });
+
+    it('should throw if main worktree is dirty instead of checking out', async () => {
+      vi.mocked(branchUtils.hasUncommittedChanges).mockResolvedValueOnce(true); // Dirty
+
+      await expect(mergeWorktreeBranch('my-branch', 'main', '/cwd')).rejects.toThrow(
+        'Cannot auto-merge: /cwd has uncommitted changes.'
+      );
       expect(execa).not.toHaveBeenCalled();
     });
   });
