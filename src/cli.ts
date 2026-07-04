@@ -31,12 +31,15 @@ program
     // To be implemented
   });
 
+import { runPlanCommand } from './commands/plan.js';
+
 program
   .command('plan')
   .description('run interactive planning')
   .option('--plan <path>', 'path to a specific plan file')
-  .action(() => {
-    // To be implemented
+  .action(async (options) => {
+    const parentOpts = program.opts();
+    await runPlanCommand({ ...options, config: parentOpts.config });
   });
 
 program
