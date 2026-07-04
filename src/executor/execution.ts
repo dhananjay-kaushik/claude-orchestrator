@@ -11,6 +11,71 @@ export interface ExecutionOutcome {
   error?: string;
   exitCode?: number | null;
   sentinel?: OrchestratorResult | null;
+  sessionLimitReached?: boolean;
+  limitResetTime?: string;
+}
+
+export interface SessionLimitInfo {
+  limitReached: boolean;
+  usage?: unknown;
+  resetTime?: string;
+  message?: string;
+}
+
+export async function checkClaudeSessionLimits(config: Config): Promise<SessionLimitInfo> {
+  // Attempt to read from Claude status.
+  // Claude Code does not yet provide a structured 'status' CLI command,
+  // so this is a best-effort preflight that fails gracefully.
+  try {
+    const result = await execa(config.claude.binary, ['-p', 'status', '--output-format', 'json'], {
+      shell: false,
+      timeout: 5000,
+      stdio: 'pipe',
+    });
+
+    try {
+      const parsed = JSON.parse(result.stdout);
+      
+      let limitReached = false;
+      let resetTime: string | undefined;
+      const msg = parsed.result || '';
+      
+      if (msg.match(/limit reached|usage limit/i)) {
+        limitReached = true;
+        const resetMatch = msg.match(/resets? in ([a-zA-Z0-9 ]+)/i);
+        if (resetMatch) {
+          resetTime = resetMatch[1].trim();
+        }
+      }
+
+      return {
+        limitReached,
+        usage: parsed.usage,
+        resetTime,
+        message: limitReached ? msg : undefined,
+      };
+    } catch {
+      return { limitReached: false };
+    }
+  } catch (error: any) {
+    let limitReached = false;
+    let resetTime: string | undefined;
+    
+    const errorMsg = [error?.message, String(error?.stdout || ''), String(error?.stderr || '')].join(' ');
+    if (errorMsg.match(/limit reached|usage limit/i)) {
+      limitReached = true;
+      const resetMatch = errorMsg.match(/resets? in ([a-zA-Z0-9 ]+)/i);
+      if (resetMatch) {
+        resetTime = resetMatch[1].trim();
+      }
+    }
+    
+    return {
+      limitReached,
+      resetTime,
+      message: limitReached ? errorMsg : undefined,
+    };
+  }
 }
 
 export async function executeClaudeHeadless(
@@ -45,11 +110,25 @@ export async function executeClaudeHeadless(
     }
 
     if (parsed.is_error) {
+      let sessionLimitReached = false;
+      let limitResetTime: string | undefined;
+      const errorMsg = parsed.result || '';
+      
+      if (errorMsg.match(/limit reached|usage limit/i)) {
+        sessionLimitReached = true;
+        const resetMatch = errorMsg.match(/resets? in ([a-zA-Z0-9 ]+)/i);
+        if (resetMatch) {
+          limitResetTime = resetMatch[1].trim();
+        }
+      }
+
       return {
         success: false,
         response: parsed,
         error: 'Claude execution returned is_error: true',
         exitCode: result.exitCode,
+        sessionLimitReached,
+        limitResetTime,
       };
     }
 
@@ -93,11 +172,25 @@ export async function executeClaudeHeadless(
       }
     }
 
+    let sessionLimitReached = false;
+    let limitResetTime: string | undefined;
+
+    const errorMsg = [error?.message, String(error?.stdout || ''), String(error?.stderr || '')].join(' ');
+    if (errorMsg.match(/limit reached|usage limit/i)) {
+      sessionLimitReached = true;
+      const resetMatch = errorMsg.match(/resets? in ([a-zA-Z0-9 ]+)/i);
+      if (resetMatch) {
+        limitResetTime = resetMatch[1].trim();
+      }
+    }
+
     return {
       success: false,
       response: parsed,
       error: error.message || 'Claude execution failed',
       exitCode: error.exitCode ?? null,
+      sessionLimitReached,
+      limitResetTime,
     };
   }
 }

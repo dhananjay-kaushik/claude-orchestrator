@@ -135,4 +135,80 @@ describe('executeClaudeHeadless', () => {
       'utf-8'
     );
   });
+
+  it('parses session limit reached from execa errors', async () => {
+    const error = new Error('Command failed') as any;
+    error.exitCode = 1;
+    error.stdout = 'Error: Claude session limit reached. Resets in 2 hours.';
+
+    vi.mocked(execa).mockRejectedValueOnce(error);
+
+    const outcome = await executeClaudeHeadless(mockConfig, 'prompt', 'logs', 'task-1');
+
+    expect(outcome.success).toBe(false);
+    expect(outcome.sessionLimitReached).toBe(true);
+    expect(outcome.limitResetTime).toBe('2 hours');
+  });
+
+  it('parses session limit reached from is_error JSON', async () => {
+    const mockResponse: ClaudeJSONResponse = {
+      result: 'Usage limit exceeded. Resets in 45 minutes',
+      is_error: true,
+    };
+
+    vi.mocked(execa).mockResolvedValueOnce({
+      stdout: JSON.stringify(mockResponse),
+      exitCode: 0,
+    } as any);
+
+    const outcome = await executeClaudeHeadless(mockConfig, 'prompt', 'logs', 'task-1');
+
+    expect(outcome.success).toBe(false);
+    expect(outcome.sessionLimitReached).toBe(true);
+    expect(outcome.limitResetTime).toBe('45 minutes');
+  });
+});
+
+import { checkClaudeSessionLimits } from './execution.js';
+
+describe('checkClaudeSessionLimits', () => {
+  const mockConfig = {
+    claude: { binary: 'claude' },
+  } as unknown as Config;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns limitReached false if no limit is mentioned', async () => {
+    vi.mocked(execa).mockResolvedValueOnce({
+      stdout: JSON.stringify({ result: 'status OK', usage: { tokens: 10 } }),
+      exitCode: 0,
+    } as any);
+
+    const info = await checkClaudeSessionLimits(mockConfig);
+    expect(info.limitReached).toBe(false);
+    expect(info.usage).toEqual({ tokens: 10 });
+  });
+
+  it('returns limitReached true if JSON says limit reached', async () => {
+    vi.mocked(execa).mockResolvedValueOnce({
+      stdout: JSON.stringify({ result: 'Session limit reached. Resets in 1 hour.' }),
+      exitCode: 0,
+    } as any);
+
+    const info = await checkClaudeSessionLimits(mockConfig);
+    expect(info.limitReached).toBe(true);
+    expect(info.resetTime).toBe('1 hour');
+  });
+
+  it('returns limitReached true if execa throws with limit error', async () => {
+    const error = new Error('Command failed') as any;
+    error.stderr = 'Usage limit reached! Resets in 30 mins.';
+    vi.mocked(execa).mockRejectedValueOnce(error);
+
+    const info = await checkClaudeSessionLimits(mockConfig);
+    expect(info.limitReached).toBe(true);
+    expect(info.resetTime).toBe('30 mins');
+  });
 });
