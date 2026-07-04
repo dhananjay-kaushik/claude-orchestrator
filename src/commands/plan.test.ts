@@ -54,7 +54,10 @@ describe('runPlanCommand', () => {
     expect(execa).toHaveBeenCalledWith(
       'claude',
       expect.arrayContaining(['-p', expect.stringContaining('docs/plans')]),
-      expect.objectContaining({ stdio: 'inherit' })
+      expect.objectContaining({
+        stdio: 'inherit',
+        env: expect.objectContaining({ CLAUDE_MODEL: 'claude-3-7-sonnet-20250219' }),
+      })
     );
   });
 
@@ -69,6 +72,20 @@ describe('runPlanCommand', () => {
     await runPlanCommand({});
 
     expect(p.outro).toHaveBeenCalledWith(expect.stringContaining('exited with code 1'));
+    expect(process.exit).not.toHaveBeenCalled();
+  });
+
+  it('should handle SIGINT cancellation gracefully', async () => {
+    vi.mocked(p.text).mockResolvedValueOnce('claude-3-7-sonnet-20250219');
+    vi.mocked(p.text).mockResolvedValueOnce('docs/plans');
+    
+    const execaError: any = new Error('Command failed');
+    execaError.signal = 'SIGINT';
+    vi.mocked(execa).mockRejectedValueOnce(execaError);
+
+    await runPlanCommand({});
+
+    expect(p.outro).toHaveBeenCalledWith(expect.stringContaining('Planning interrupted'));
     expect(process.exit).not.toHaveBeenCalled();
   });
 });
