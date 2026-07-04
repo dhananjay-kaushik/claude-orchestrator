@@ -104,11 +104,13 @@ export async function executeClaudeHeadless(
       cancelSignal: signal,
     });
 
+    const timestamp = new Date().toISOString();
+    const header = `\n\n--- Claude Execution at ${timestamp} ---\n`;
     const stdoutRedacted = redactSecrets(result.stdout);
-    await fs.writeFile(rawLogPath, stdoutRedacted, 'utf-8');
+    await fs.appendFile(rawLogPath, header + stdoutRedacted + '\n', 'utf-8');
     if (result.stderr) {
       const stderrLogPath = path.join(logDir, `${taskId}-claude-stderr.log`);
-      await fs.writeFile(stderrLogPath, redactSecrets(result.stderr), 'utf-8');
+      await fs.appendFile(stderrLogPath, header + redactSecrets(result.stderr) + '\n', 'utf-8');
     }
 
     let parsed: ClaudeJSONResponse;
@@ -172,12 +174,14 @@ export async function executeClaudeHeadless(
       sentinel,
     };
   } catch (error: any) {
+    const timestamp = new Date().toISOString();
+    const header = `\n\n--- Claude Execution at ${timestamp} ---\n`;
     if (error.stdout) {
-      await fs.writeFile(rawLogPath, redactSecrets(String(error.stdout)), 'utf-8');
+      await fs.appendFile(rawLogPath, header + redactSecrets(String(error.stdout)) + '\n', 'utf-8');
     }
     if (error.stderr) {
       const stderrLogPath = path.join(logDir, `${taskId}-claude-stderr.log`);
-      await fs.writeFile(stderrLogPath, redactSecrets(String(error.stderr)), 'utf-8');
+      await fs.appendFile(stderrLogPath, header + redactSecrets(String(error.stderr)) + '\n', 'utf-8');
     }
 
     if (error.isCanceled || error.signal === 'SIGINT') {
