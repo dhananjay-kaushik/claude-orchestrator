@@ -113,3 +113,11 @@ export interface ExecutionSummary {
  */
 export type OrchestratorResult =
   { type: 'SUCCESS' } | { type: 'BLOCKED'; reason: string } | { type: 'NEEDS_RETRY_CONTEXT' };
+
+export interface ClaudeJSONResponse {
+  result: string;
+  total_cost_usd?: number;
+  usage?: unknown;
+  session_id?: string;
+  is_error?: boolean;
+}

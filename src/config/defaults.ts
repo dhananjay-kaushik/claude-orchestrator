@@ -4,10 +4,10 @@ export const defaultConfig = {
   baseBranch: 'main',
   branchPrefix: 'claude-',
   models: {
-    planning: 'claude-3-5-sonnet-20241022'
+    planning: 'claude-3-5-sonnet-20241022',
   },
   claude: {
-    binary: 'claude'
+    binary: 'claude',
   },
   taskTimeoutMs: 300000,
   verificationCommands: [],
@@ -18,11 +18,11 @@ export const defaultConfig = {
   commitMessageTemplate: 'chore: complete task from plan',
   sessionLimits: {
     showBeforeRun: true,
-    pauseOnLimit: true
+    pauseOnLimit: true,
   },
   security: {
     deniedCommands: ['rm', 'git reset', 'git clean', 'git push', 'git branch -D'],
     protectedPaths: ['.env', '.env.local', 'secrets', 'credentials', '.git'],
-    allowNetwork: false
-  }
+    allowNetwork: false,
+  },
 };

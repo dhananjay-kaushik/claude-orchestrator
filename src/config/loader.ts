@@ -16,7 +16,9 @@ function deepMerge(target: any, source: any): any {
   return output;
 }
 
-export async function loadConfig(configPath: string = '.claude-orchestrator.json'): Promise<ConfigSchemaType> {
+export async function loadConfig(
+  configPath: string = '.claude-orchestrator.json',
+): Promise<ConfigSchemaType> {
   const resolvedPath = path.resolve(process.cwd(), configPath);
   let userConfig = {};
 
@@ -37,15 +39,23 @@ export async function loadConfig(configPath: string = '.claude-orchestrator.json
 
     // Reject protected paths that escape process.cwd()
     for (const protectedPath of validatedConfig.security.protectedPaths) {
-      if (protectedPath.startsWith('../') || protectedPath.startsWith('..\\') || path.isAbsolute(protectedPath)) {
-        throw new Error(`Protected path "${protectedPath}" escapes process.cwd(). Absolute paths or parent directory traversals are not allowed for security reasons.`);
+      if (
+        protectedPath.startsWith('../') ||
+        protectedPath.startsWith('..\\') ||
+        path.isAbsolute(protectedPath)
+      ) {
+        throw new Error(
+          `Protected path "${protectedPath}" escapes process.cwd(). Absolute paths or parent directory traversals are not allowed for security reasons.`,
+        );
       }
     }
 
     return validatedConfig;
   } catch (error: any) {
     if (error instanceof ZodError) {
-      const messages = error.issues.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
+      const messages = error.issues
+        .map((err) => `${err.path.join('.')}: ${err.message}`)
+        .join(', ');
       throw new Error(`Config validation failed: ${messages}`);
     }
     throw error;

@@ -10,21 +10,21 @@ describe('configSchema', () => {
       branchPrefix: 'orchestrator-',
       models: {
         planning: 'claude-3-5-sonnet-20241022',
-        execution: 'claude-3-5-haiku-20241022'
+        execution: 'claude-3-5-haiku-20241022',
       },
       claude: {
         binary: 'claude',
         permissionMode: 'auto',
         allowedTools: ['Bash', 'View', 'Edit'],
-        extraSafeArgs: ['--verbose']
+        extraSafeArgs: ['--verbose'],
       },
       taskTimeoutMs: 600000,
       verificationCommands: [
         {
           command: 'npm',
           args: ['run', 'test'],
-          timeoutMs: 30000
-        }
+          timeoutMs: 30000,
+        },
       ],
       maxRetries: 3,
       logsDir: 'logs',
@@ -33,14 +33,14 @@ describe('configSchema', () => {
       commitMessageTemplate: 'chore: complete task',
       sessionLimits: {
         showBeforeRun: true,
-        pauseOnLimit: true
+        pauseOnLimit: true,
       },
       security: {
         allowedCommands: ['npm', 'git'],
         deniedCommands: ['rm', 'drop'],
         protectedPaths: ['.env', 'secrets.json'],
-        allowNetwork: false
-      }
+        allowNetwork: false,
+      },
     };
 
     const result = configSchema.safeParse(validConfig);
@@ -49,7 +49,7 @@ describe('configSchema', () => {
 
   it('rejects missing required fields', () => {
     const invalidConfig = {
-      version: '1.0.0'
+      version: '1.0.0',
       // Missing all other fields
     };
 
@@ -66,7 +66,7 @@ describe('verificationCommandSchema', () => {
       timeoutMs: 5000,
       cwd: './',
       env: { NODE_ENV: 'test' },
-      allowFailure: true
+      allowFailure: true,
     });
     expect(result.success).toBe(true);
   });
@@ -74,7 +74,7 @@ describe('verificationCommandSchema', () => {
   it('rejects a command without args', () => {
     const result = verificationCommandSchema.safeParse({
       command: 'npm',
-      timeoutMs: 5000
+      timeoutMs: 5000,
     });
     expect(result.success).toBe(false);
   });

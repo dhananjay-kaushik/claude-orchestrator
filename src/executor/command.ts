@@ -1,13 +1,11 @@
 import { Config } from '../types/index.js';
 
-export function buildClaudeCommand(config: Config, prompt: string): { command: string; args: string[] } {
+export function buildClaudeCommand(
+  config: Config,
+  prompt: string,
+): { command: string; args: string[] } {
   const command = config.claude?.binary || 'claude';
-  const args = [
-    '-p',
-    prompt,
-    '--output-format',
-    'json'
-  ];
+  const args = ['-p', prompt, '--output-format', 'json'];
 
   if (config.claude?.permissionMode) {
     args.push('--permission-mode', config.claude.permissionMode);
@@ -19,7 +17,7 @@ export function buildClaudeCommand(config: Config, prompt: string): { command: s
 
   if (config.claude?.extraSafeArgs && config.claude.extraSafeArgs.length > 0) {
     const safeArgs = config.claude.extraSafeArgs.filter(
-      (arg) => arg !== '--dangerously-skip-permissions'
+      (arg) => arg !== '--dangerously-skip-permissions',
     );
     args.push(...safeArgs);
   }
