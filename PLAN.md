@@ -53,7 +53,7 @@ This project must be built with a test-driven development approach. For every pa
   - Add a `.gitignore` covering `node_modules`, build output, logs, generated orchestration state, and local environment files.
   - Initialize Git for this repository before any branch orchestration work begins.
 
-- [ ] Add strict TypeScript configuration.
+- [-] Add strict TypeScript configuration.
   - Create `tsconfig.json` with strict mode enabled.
   - Prefer explicit interfaces and discriminated unions for config, CLI args, plan parsing results, task states, verification results, and execution summaries.
   - Avoid `any`; use `unknown` plus validation when external data is parsed.
