@@ -9,9 +9,9 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 23
+- **NOT_DONE**: 22
 - **IN_PROGRESS**: 0
-- **DONE**: 34
+- **DONE**: 35
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -336,7 +336,7 @@ This project must be built with a test-driven development approach. For every pa
   - If the sentinel is missing, treat the run as `FAILED` or `NEEDS_RETRY_CONTEXT` according to tests, and do not verify/commit blindly.
   - For `BLOCKED`, require a `BLOCKED_REASON:` line in the result and store it in state.
 
-- [ ] Implement Claude session-limit awareness.
+- [x] Implement Claude session-limit awareness.
   - Before spawning Claude, attempt to read available usage/session-limit information if Claude Code exposes it through command output, status output, logs, or another stable interface.
   - Treat usage visibility as best-effort: if remaining usage or reset time cannot be determined, show `unknown` rather than guessing.
   - When available, show remaining Claude session usage and reset time in the pre-run terminal summary.
