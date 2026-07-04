@@ -1,7 +1,9 @@
 import { loadConfig } from '../config/loader.js';
 import { discoverPlan } from '../plans/discovery.js';
-import { parsePlan, ValidationError } from '../plans/parser.js';
+import { parsePlan, ValidationError, determineNextTask, updateTaskStatus } from '../plans/parser.js';
+import { checkClaudeSessionLimits, executeClaudeHeadless } from '../executor/execution.js';
 import fs from 'fs';
+import path from 'path';
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
 
@@ -32,8 +34,9 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
   p.log.info(`Selected plan: ${pc.cyan(planPath)}`);
 
   let parsedPlan;
+  let planContent;
   try {
-    const planContent = fs.readFileSync(planPath, 'utf8');
+    planContent = fs.readFileSync(planPath, 'utf8');
     parsedPlan = parsePlan(planContent, planPath);
     p.log.success(pc.green(`Plan validated successfully: ${parsedPlan.tasks.length} tasks found.`));
   } catch (error) {
@@ -44,6 +47,51 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
     throw error;
   }
 
-  // Rest of execution phase...
-  p.outro(pc.yellow('Execution engine not fully implemented yet.'));
+  const retryCounts: Record<string, number> = {};
+  const nextTask = determineNextTask(parsedPlan.tasks, config.maxRetries || 3, retryCounts);
+
+  if (!nextTask) {
+    p.log.success(pc.green('No executable tasks found. Plan is complete or blocked.'));
+    process.exit(0);
+    return;
+  }
+
+  p.log.info(`Next task: ${nextTask.originalText.trim()}`);
+
+  const limitInfo = await checkClaudeSessionLimits(config);
+  if (limitInfo.limitReached) {
+    p.log.warn(pc.yellow(`Claude session limit reached: ${limitInfo.message || 'unknown'}`));
+    process.exit(0);
+    return;
+  }
+
+  const updatedPlanContent = updateTaskStatus(planContent, nextTask, 'IN_PROGRESS');
+  fs.writeFileSync(planPath, updatedPlanContent, 'utf8');
+  p.log.info(pc.blue('Marked task as IN_PROGRESS.'));
+
+  p.log.info('Spawning Claude Code...');
+  const logsDir = config.logsDir || '.claude-orchestrator/logs';
+  const taskLogDir = path.join(logsDir, parsedPlan.planId, nextTask.id);
+
+  const prompt = `Implement this task: ${nextTask.originalText}\nDo not mark as done. Do not commit.`;
+  const outcome = await executeClaudeHeadless(config, prompt, taskLogDir, nextTask.id);
+
+  if (outcome.success) {
+    p.log.success(pc.green('Claude execution succeeded.'));
+    const donePlanContent = updateTaskStatus(updatedPlanContent, nextTask, 'DONE');
+    fs.writeFileSync(planPath, donePlanContent, 'utf8');
+    p.log.success(pc.green('Marked task as DONE.'));
+  } else {
+    p.log.error(pc.red(`Claude execution failed: ${outcome.error}`));
+    if (outcome.sessionLimitReached) {
+       p.log.warn(pc.yellow(`Session limit reached. Resets in ${outcome.limitResetTime || 'unknown'}.`));
+    } else {
+       const failPlanContent = updateTaskStatus(updatedPlanContent, nextTask, 'FAILED');
+       fs.writeFileSync(planPath, failPlanContent, 'utf8');
+       p.log.error(pc.red('Marked task as FAILED.'));
+    }
+  }
+
+  p.outro(pc.green('Execution engine iteration complete.'));
 }
+

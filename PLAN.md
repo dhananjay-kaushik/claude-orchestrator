@@ -349,7 +349,7 @@ This project must be built with a test-driven development approach. For every pa
   - Do not increment the normal task retry counter for session-limit blocks; quota exhaustion is not an implementation failure.
   - If the app later supports automations, optionally schedule a resume after reset only with explicit user opt-in.
 
-- [ ] Implement the execution loop.
+- [-] Implement the execution loop.
   - Load config and selected plan.
   - Run Claude binary/auth preflight before task selection or plan mutation.
   - Parse tasks and identify the next executable task.
