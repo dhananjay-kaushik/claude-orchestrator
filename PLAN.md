@@ -9,9 +9,9 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 30
-- **IN_PROGRESS**: 1
-- **DONE**: 26
+- **NOT_DONE**: 29
+- **IN_PROGRESS**: 0
+- **DONE**: 28
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -258,14 +258,14 @@ This project must be built with a test-driven development approach. For every pa
   - Show useful metadata where available, such as last modified time and remaining task count.
   - Handle empty plan directories with a prompt to run `claude-orchestrator plan`.
 
-- [-] Validate plan files before execution.
+- [x] Validate plan files before execution.
   - Require at least one recognized task checkbox.
   - Reject ambiguous checkbox markers outside the supported 5-state system.
   - Reject duplicate task identities only if they would make state tracking unsafe.
   - Report malformed task lines with line numbers.
   - Do not spawn Claude until the plan validates.
 
-- [ ] Define strict task status types.
+- [x] Define strict task status types.
   - `NOT_DONE`: `- [ ]` or `* [ ]`.
   - `IN_PROGRESS`: `- [-]` or `* [-]`.
   - `DONE`: `- [x]`, `- [X]`, `* [x]`, or `* [X]`.
