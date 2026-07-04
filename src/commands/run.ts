@@ -225,31 +225,11 @@ async function runOneTask(
 
   p.log.info('Spawning Claude Code...');
 
-  let needsWorktreeCreation = true;
+  // The worktree/branch is shared across every task in the plan, so once
+  // task 1 creates it, later tasks just keep committing onto it here.
   if (fs.existsSync(taskWorktree)) {
-    const action = await p.select({
-      message: `Existing worktree found at ${taskWorktree}. How would you like to proceed?`,
-      options: [
-        { value: 'continue', label: 'Continue with existing worktree' },
-        { value: 'clean', label: 'Retry from a clean base (delete existing)' },
-        { value: 'halt', label: 'Halt execution' },
-      ],
-    });
-
-    if (p.isCancel(action) || action === 'halt') {
-      p.log.info(pc.yellow('Execution halted.'));
-      process.exit(0);
-      return;
-    }
-
-    if (action === 'clean') {
-      fs.rmSync(taskWorktree, { recursive: true, force: true });
-    } else {
-      needsWorktreeCreation = false;
-    }
-  }
-
-  if (needsWorktreeCreation) {
+    p.log.info(pc.blue(`Reusing existing plan worktree at ${taskWorktree}.`));
+  } else {
     const branchName = getWorktreeBranchName(parsedPlan.planId);
     await createWorktree(taskWorktree, branchName, baseBranch, process.cwd());
   }
