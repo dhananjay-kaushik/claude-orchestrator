@@ -9,9 +9,9 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 46
+- **NOT_DONE**: 45
 - **IN_PROGRESS**: 0
-- **DONE**: 11
+- **DONE**: 12
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -159,7 +159,7 @@ This project must be built with a test-driven development approach. For every pa
   - `sessionLimits.resumeAfterReset` is post-MVP and must not silently schedule work in MVP.
   - Notifications and webhooks are post-MVP and must not affect MVP control flow.
 
-- [ ] Define the fixed Claude execution command contract.
+- [x] Define the fixed Claude execution command contract.
   - The orchestrator assembles `claude -p <prompt> --output-format json`.
   - User config must not replace `-p` or `--output-format json`.
   - User config must not enable `--dangerously-skip-permissions` for normal execution.
