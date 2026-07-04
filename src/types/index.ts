@@ -63,6 +63,14 @@ export interface CliArgs {
  */
 export type TaskStatus = 'NOT_DONE' | 'IN_PROGRESS' | 'DONE' | 'FAILED' | 'BLOCKED';
 
+export const TaskStatusMarkers: Record<TaskStatus, string[]> = {
+  NOT_DONE: ['- [ ]', '* [ ]'],
+  IN_PROGRESS: ['- [-]', '* [-]'],
+  DONE: ['- [x]', '- [X]', '* [x]', '* [X]'],
+  FAILED: ['- [f]', '- [F]', '* [f]', '* [F]'],
+  BLOCKED: ['- [b]', '- [B]', '* [b]', '* [B]'],
+};
+
 export interface TaskState {
   id: string; // stable slug/hash
   status: TaskStatus;
