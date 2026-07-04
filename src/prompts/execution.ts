@@ -3,7 +3,7 @@ export function buildExecutionPrompt(
   taskText: string,
   taskId: string,
   worktreePath: string,
-  retryContext?: { lastError?: string; lastVerificationError?: string }
+  retryContext?: { lastError?: string; lastVerificationError?: string },
 ): string {
   let prompt = `You are Claude Code Orchestrator's headless execution agent.
 You have ONE task. You must implement ONLY the following task:

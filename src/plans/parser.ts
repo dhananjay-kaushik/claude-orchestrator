@@ -36,7 +36,7 @@ export function parsePlan(planContent: string, planId: string): PlanParseResult 
 
     // Ignore things like - [Link](...) if they look like links
     if (marker.length > 1 && !['x', 'X', 'f', 'F', 'b', 'B', '-', ' '].includes(marker)) {
-        continue;
+      continue;
     }
 
     let status: TaskStatus;
@@ -51,7 +51,9 @@ export function parsePlan(planContent: string, planId: string): PlanParseResult 
     } else if (marker === 'b' || marker === 'B') {
       status = 'BLOCKED';
     } else {
-      throw new ValidationError(`Malformed task on line ${i + 1}: Ambiguous checkbox marker "${bullet} [${marker}]"`);
+      throw new ValidationError(
+        `Malformed task on line ${i + 1}: Ambiguous checkbox marker "${bullet} [${marker}]"`,
+      );
     }
 
     const identityRaw = `${currentHeading} | ${taskText}`;
@@ -69,7 +71,7 @@ export function parsePlan(planContent: string, planId: string): PlanParseResult 
       id,
       status,
       originalText: line,
-      headingContext: currentHeading
+      headingContext: currentHeading,
     });
   }
 
@@ -83,9 +85,9 @@ export function parsePlan(planContent: string, planId: string): PlanParseResult 
 export function determineNextTask(
   tasks: TaskState[],
   maxRetries: number,
-  retryCounts: Record<string, number>
+  retryCounts: Record<string, number>,
 ): TaskState | undefined {
-  const inProgress = tasks.find(t => t.status === 'IN_PROGRESS');
+  const inProgress = tasks.find((t) => t.status === 'IN_PROGRESS');
   if (inProgress) return inProgress;
 
   for (const task of tasks) {
@@ -113,17 +115,20 @@ export function determineNextTask(
 export function updateTaskStatus(
   planContent: string,
   taskToUpdate: TaskState,
-  newStatus: TaskStatus
+  newStatus: TaskStatus,
 ): string {
   const lines = planContent.split('\n');
-  const index = lines.findIndex(line => line === taskToUpdate.originalText);
-  
+  const index = lines.findIndex((line) => line === taskToUpdate.originalText);
+
   if (index === -1) {
     throw new Error('Task line not found in plan content.');
   }
 
   const checkboxRegex = /^(\s*)([-*])\s+\[(.*?)\](\s+.*)$/;
-  lines[index] = lines[index].replace(checkboxRegex, `$1$2 [${newStatus === 'NOT_DONE' ? ' ' : newStatus === 'IN_PROGRESS' ? '-' : newStatus === 'DONE' ? 'x' : newStatus === 'FAILED' ? 'f' : 'b'}]$4`);
-  
+  lines[index] = lines[index].replace(
+    checkboxRegex,
+    `$1$2 [${newStatus === 'NOT_DONE' ? ' ' : newStatus === 'IN_PROGRESS' ? '-' : newStatus === 'DONE' ? 'x' : newStatus === 'FAILED' ? 'f' : 'b'}]$4`,
+  );
+
   return lines.join('\n');
 }

@@ -10,9 +10,18 @@ describe('CLI Help & Entry point', () => {
   });
 
   it('every MVP CLI command can render help', () => {
-    const commands = program.commands.map(c => c.name());
+    const commands = program.commands.map((c) => c.name());
     expect(commands).toEqual(
-      expect.arrayContaining(['init', 'doctor', 'validate', 'plan', 'run', 'status', 'logs', 'resume'])
+      expect.arrayContaining([
+        'init',
+        'doctor',
+        'validate',
+        'plan',
+        'run',
+        'status',
+        'logs',
+        'resume',
+      ]),
     );
     for (const cmd of program.commands) {
       expect(cmd.helpInformation()).toContain(`Usage: claude-orchestrator ${cmd.name()}`);
@@ -32,15 +41,15 @@ describe('CLI Help & Entry point', () => {
 
 describe('CLI Option Rules', () => {
   it('defines global options for config and verbosity', () => {
-    const options = program.options.map(o => o.long);
+    const options = program.options.map((o) => o.long);
     expect(options).toContain('--config');
     expect(options).toContain('--verbose');
   });
 
   it('defines allowed options for the run command', () => {
-    const runCmd = program.commands.find(c => c.name() === 'run');
+    const runCmd = program.commands.find((c) => c.name() === 'run');
     expect(runCmd).toBeDefined();
-    const options = runCmd!.options.map(o => o.long);
+    const options = runCmd!.options.map((o) => o.long);
     expect(options).toContain('--plan');
     expect(options).toContain('--task');
     expect(options).toContain('--loop');
@@ -51,7 +60,7 @@ describe('CLI Option Rules', () => {
   });
 
   it('does not include dangerous override flags globally', () => {
-    const options = program.options.map(o => o.long);
+    const options = program.options.map((o) => o.long);
     expect(options).not.toContain('--dangerously-skip-permissions');
   });
 });
@@ -60,11 +69,10 @@ describe('Doctor Command', () => {
   it('doctor fails before task mutation when Claude is missing or unauthenticated', async () => {
     // Currently the command action is empty, but we simulate the requirement test.
     // In actual implementation, doctor will throw or exit if `claude` is not found.
-    const doctorCmd = program.commands.find(c => c.name() === 'doctor');
+    const doctorCmd = program.commands.find((c) => c.name() === 'doctor');
     expect(doctorCmd).toBeDefined();
     // We just verify the test requirement is present.
     // Without full implementation, this is a placeholder test.
     expect(true).toBe(true);
   });
 });
-

@@ -27,7 +27,9 @@ describe('Execution State Storage', () => {
       const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const state = await loadPlanState('plan-1', mockConfig as Config);
       expect(state).toEqual({ planId: 'plan-1', tasks: {} });
-      expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining('Warning: Failed to parse state file'));
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Warning: Failed to parse state file'),
+      );
       consoleWarnSpy.mockRestore();
     });
 
@@ -56,10 +58,14 @@ describe('Execution State Storage', () => {
     it('writes state to the correct path', async () => {
       const state: PlanState = { planId: 'plan-1', tasks: {} };
       await savePlanState(state, mockConfig as Config);
-      
+
       const expectedPath = path.join(process.cwd(), '.claude-orchestrator', 'state', 'plan-1.json');
       expect(fs.mkdir).toHaveBeenCalledWith(path.dirname(expectedPath), { recursive: true });
-      expect(fs.writeFile).toHaveBeenCalledWith(expectedPath, JSON.stringify(state, null, 2), 'utf-8');
+      expect(fs.writeFile).toHaveBeenCalledWith(
+        expectedPath,
+        JSON.stringify(state, null, 2),
+        'utf-8',
+      );
     });
   });
 

@@ -52,18 +52,18 @@ export async function runPlanCommand(options: { plan?: string; config?: string }
 
   // 3. Spawn Claude Code
   const claudeBinary = config.claude.binary || 'claude';
-  
+
   try {
     const childProcess = execa(claudeBinary, ['-p', planPrompt], {
       stdio: 'inherit',
       env: {
         ...process.env,
         CLAUDE_MODEL: modelResult as string,
-      }
+      },
     });
 
     await childProcess;
-    
+
     p.outro(pc.green('Planning completed successfully.'));
   } catch (error: any) {
     if (error.signal === 'SIGINT' || error.isCanceled) {

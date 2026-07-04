@@ -24,7 +24,7 @@ vi.mock('../config/loader.js', () => ({
   loadConfig: vi.fn().mockResolvedValue({
     models: { planning: 'claude-3-7-sonnet-20250219' },
     planDir: 'docs/plans',
-    claude: { binary: 'claude' }
+    claude: { binary: 'claude' },
   }),
 }));
 
@@ -50,21 +50,23 @@ describe('runPlanCommand', () => {
     await runPlanCommand({});
 
     expect(p.text).toHaveBeenCalledTimes(2);
-    expect(fs.mkdir).toHaveBeenCalledWith(expect.stringContaining('docs/plans'), { recursive: true });
+    expect(fs.mkdir).toHaveBeenCalledWith(expect.stringContaining('docs/plans'), {
+      recursive: true,
+    });
     expect(execa).toHaveBeenCalledWith(
       'claude',
       expect.arrayContaining(['-p', expect.stringContaining('docs/plans')]),
       expect.objectContaining({
         stdio: 'inherit',
         env: expect.objectContaining({ CLAUDE_MODEL: 'claude-3-7-sonnet-20250219' }),
-      })
+      }),
     );
   });
 
   it('should handle non-zero Claude exits gracefully', async () => {
     vi.mocked(p.text).mockResolvedValueOnce('claude-3-7-sonnet-20250219');
     vi.mocked(p.text).mockResolvedValueOnce('docs/plans');
-    
+
     const execaError: any = new Error('Command failed');
     execaError.exitCode = 1;
     vi.mocked(execa).mockRejectedValueOnce(execaError);
@@ -78,7 +80,7 @@ describe('runPlanCommand', () => {
   it('should handle SIGINT cancellation gracefully', async () => {
     vi.mocked(p.text).mockResolvedValueOnce('claude-3-7-sonnet-20250219');
     vi.mocked(p.text).mockResolvedValueOnce('docs/plans');
-    
+
     const execaError: any = new Error('Command failed');
     execaError.signal = 'SIGINT';
     vi.mocked(execa).mockRejectedValueOnce(execaError);

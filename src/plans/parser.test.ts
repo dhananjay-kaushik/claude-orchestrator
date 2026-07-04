@@ -29,7 +29,9 @@ describe('Plan Parser', () => {
   it('should throw if no recognized task checkboxes exist', () => {
     const plan = `# Just a heading\nNo tasks here.`;
     expect(() => parsePlan(plan, 'plan1')).toThrowError(ValidationError);
-    expect(() => parsePlan(plan, 'plan1')).toThrowError('No recognized task checkboxes found in plan.');
+    expect(() => parsePlan(plan, 'plan1')).toThrowError(
+      'No recognized task checkboxes found in plan.',
+    );
   });
 
   it('should reject ambiguous checkbox markers', () => {
@@ -38,7 +40,9 @@ describe('Plan Parser', () => {
 - [?] Ambiguous task
 `;
     expect(() => parsePlan(plan, 'plan1')).toThrowError(ValidationError);
-    expect(() => parsePlan(plan, 'plan1')).toThrowError('Malformed task on line 3: Ambiguous checkbox marker "- [?]"');
+    expect(() => parsePlan(plan, 'plan1')).toThrowError(
+      'Malformed task on line 3: Ambiguous checkbox marker "- [?]"',
+    );
   });
 
   it('should reject duplicate task identities', () => {

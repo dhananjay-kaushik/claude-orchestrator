@@ -44,12 +44,12 @@ describe('executeClaudeHeadless', () => {
     expect(fs.writeFile).toHaveBeenCalledWith(
       'logs/task-1-claude-response.json',
       JSON.stringify(mockResponse),
-      'utf-8'
+      'utf-8',
     );
     expect(fs.writeFile).toHaveBeenCalledWith(
       'logs/task-1-claude-stderr.log',
       'Some error with a secret password=[REDACTED]',
-      'utf-8'
+      'utf-8',
     );
   });
 
@@ -83,7 +83,7 @@ describe('executeClaudeHeadless', () => {
     expect(fs.writeFile).toHaveBeenCalledWith(
       'logs/task-1-claude-response.json',
       'not json',
-      'utf-8'
+      'utf-8',
     );
   });
 
@@ -139,12 +139,12 @@ describe('executeClaudeHeadless', () => {
     expect(fs.writeFile).toHaveBeenCalledWith(
       'logs/task-1-claude-response.json',
       '{"result": "partial", "password": "[REDACTED]"}',
-      'utf-8'
+      'utf-8',
     );
     expect(fs.writeFile).toHaveBeenCalledWith(
       'logs/task-1-claude-stderr.log',
       'Timeout with token=[REDACTED]',
-      'utf-8'
+      'utf-8',
     );
   });
 

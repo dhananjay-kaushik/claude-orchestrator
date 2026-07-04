@@ -29,16 +29,16 @@ vi.mock('@clack/prompts', () => ({
 describe('runCommand', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     vi.mocked(loader.loadConfig).mockResolvedValue({
       planDir: 'plans',
       taskTimeoutMs: 1000,
-      claude: { binary: 'claude' }
+      claude: { binary: 'claude' },
     } as any);
-    
+
     vi.mocked(discovery.discoverPlan).mockResolvedValue('plans/PLAN.md');
     vi.mocked(fs.readFileSync).mockReturnValue('plan content');
-    
+
     vi.mocked(state.loadPlanState).mockResolvedValue({ planId: 'plan1', tasks: {} });
     vi.mocked(state.getTaskState).mockReturnValue({
       id: '2',
@@ -55,59 +55,103 @@ describe('runCommand', () => {
   it('stops if no executable tasks are found', async () => {
     vi.mocked(parser.parsePlan).mockReturnValue({
       planId: 'plan1',
-      tasks: [{ id: '1', status: 'DONE', originalText: '- [x] task', headingContext: '' }]
+      tasks: [{ id: '1', status: 'DONE', originalText: '- [x] task', headingContext: '' }],
     });
     vi.mocked(parser.determineNextTask).mockReturnValue(undefined);
 
     const mockExit = vi.spyOn(process, 'exit').mockImplementation((() => {}) as any);
 
     await runCommand({});
-    
-    expect(p.log.success).toHaveBeenCalledWith(expect.stringContaining('No executable tasks found'));
+
+    expect(p.log.success).toHaveBeenCalledWith(
+      expect.stringContaining('No executable tasks found'),
+    );
     expect(mockExit).toHaveBeenCalledWith(0);
-    
+
     mockExit.mockRestore();
   });
 
   it('runs Claude and marks task DONE on success', async () => {
-    const mockTask = { id: '2', status: 'NOT_DONE', originalText: '- [ ] task 2', headingContext: '' } as any;
+    const mockTask = {
+      id: '2',
+      status: 'NOT_DONE',
+      originalText: '- [ ] task 2',
+      headingContext: '',
+    } as any;
     vi.mocked(parser.parsePlan).mockReturnValue({ planId: 'plan1', tasks: [mockTask] });
     vi.mocked(parser.determineNextTask).mockReturnValue(mockTask);
     vi.mocked(execution.checkClaudeSessionLimits).mockResolvedValue({ limitReached: false });
-    vi.mocked(execution.executeClaudeHeadless).mockResolvedValue({ success: true, exitCode: 0, sentinel: { type: 'SUCCESS' } });
-    vi.mocked(parser.updateTaskStatus).mockReturnValueOnce('plan content IN_PROGRESS').mockReturnValueOnce('plan content DONE');
+    vi.mocked(execution.executeClaudeHeadless).mockResolvedValue({
+      success: true,
+      exitCode: 0,
+      sentinel: { type: 'SUCCESS' },
+    });
+    vi.mocked(parser.updateTaskStatus)
+      .mockReturnValueOnce('plan content IN_PROGRESS')
+      .mockReturnValueOnce('plan content DONE');
 
     await runCommand({});
 
     expect(parser.updateTaskStatus).toHaveBeenCalledWith('plan content', mockTask, 'IN_PROGRESS');
-    expect(fs.writeFileSync).toHaveBeenCalledWith('plans/PLAN.md', 'plan content IN_PROGRESS', 'utf8');
-    
+    expect(fs.writeFileSync).toHaveBeenCalledWith(
+      'plans/PLAN.md',
+      'plan content IN_PROGRESS',
+      'utf8',
+    );
+
     expect(execution.executeClaudeHeadless).toHaveBeenCalled();
-    
-    expect(parser.updateTaskStatus).toHaveBeenCalledWith('plan content IN_PROGRESS', mockTask, 'DONE');
+
+    expect(parser.updateTaskStatus).toHaveBeenCalledWith(
+      'plan content IN_PROGRESS',
+      mockTask,
+      'DONE',
+    );
     expect(fs.writeFileSync).toHaveBeenCalledWith('plans/PLAN.md', 'plan content DONE', 'utf8');
   });
 
   it('runs Claude and marks task FAILED on failure', async () => {
-    const mockTask = { id: '2', status: 'NOT_DONE', originalText: '- [ ] task 2', headingContext: '' } as any;
+    const mockTask = {
+      id: '2',
+      status: 'NOT_DONE',
+      originalText: '- [ ] task 2',
+      headingContext: '',
+    } as any;
     vi.mocked(parser.parsePlan).mockReturnValue({ planId: 'plan1', tasks: [mockTask] });
     vi.mocked(parser.determineNextTask).mockReturnValue(mockTask);
     vi.mocked(execution.checkClaudeSessionLimits).mockResolvedValue({ limitReached: false });
-    vi.mocked(execution.executeClaudeHeadless).mockResolvedValue({ success: false, error: 'failed' });
-    vi.mocked(parser.updateTaskStatus).mockReturnValueOnce('plan content IN_PROGRESS').mockReturnValueOnce('plan content FAILED');
+    vi.mocked(execution.executeClaudeHeadless).mockResolvedValue({
+      success: false,
+      error: 'failed',
+    });
+    vi.mocked(parser.updateTaskStatus)
+      .mockReturnValueOnce('plan content IN_PROGRESS')
+      .mockReturnValueOnce('plan content FAILED');
 
     await runCommand({});
 
-    expect(parser.updateTaskStatus).toHaveBeenCalledWith('plan content IN_PROGRESS', mockTask, 'FAILED');
+    expect(parser.updateTaskStatus).toHaveBeenCalledWith(
+      'plan content IN_PROGRESS',
+      mockTask,
+      'FAILED',
+    );
     expect(fs.writeFileSync).toHaveBeenCalledWith('plans/PLAN.md', 'plan content FAILED', 'utf8');
   });
 
   it('handles SIGINT gracefully and preserves IN_PROGRESS status', async () => {
-    const mockTask = { id: '2', status: 'NOT_DONE', originalText: '- [ ] task 2', headingContext: '' } as any;
+    const mockTask = {
+      id: '2',
+      status: 'NOT_DONE',
+      originalText: '- [ ] task 2',
+      headingContext: '',
+    } as any;
     vi.mocked(parser.parsePlan).mockReturnValue({ planId: 'plan1', tasks: [mockTask] });
     vi.mocked(parser.determineNextTask).mockReturnValue(mockTask);
     vi.mocked(execution.checkClaudeSessionLimits).mockResolvedValue({ limitReached: false });
-    vi.mocked(execution.executeClaudeHeadless).mockResolvedValue({ success: false, error: 'Execution interrupted by user', interrupted: true });
+    vi.mocked(execution.executeClaudeHeadless).mockResolvedValue({
+      success: false,
+      error: 'Execution interrupted by user',
+      interrupted: true,
+    });
     vi.mocked(parser.updateTaskStatus).mockReturnValueOnce('plan content IN_PROGRESS');
 
     const mockExit = vi.spyOn(process, 'exit').mockImplementation((() => {}) as any);
@@ -116,7 +160,11 @@ describe('runCommand', () => {
 
     expect(state.savePlanState).toHaveBeenCalled();
     expect(fs.writeFileSync).toHaveBeenCalledTimes(1); // Only for IN_PROGRESS
-    expect(fs.writeFileSync).toHaveBeenCalledWith('plans/PLAN.md', 'plan content IN_PROGRESS', 'utf8');
+    expect(fs.writeFileSync).toHaveBeenCalledWith(
+      'plans/PLAN.md',
+      'plan content IN_PROGRESS',
+      'utf8',
+    );
     expect(p.log.warn).toHaveBeenCalledWith(expect.stringContaining('Task interrupted'));
     expect(mockExit).toHaveBeenCalledWith(130);
 
@@ -124,31 +172,50 @@ describe('runCommand', () => {
   });
 
   it('prompts if existing worktree is found and cleans it if selected', async () => {
-    const mockTask = { id: '2', status: 'NOT_DONE', originalText: '- [ ] task 2', headingContext: '' } as any;
+    const mockTask = {
+      id: '2',
+      status: 'NOT_DONE',
+      originalText: '- [ ] task 2',
+      headingContext: '',
+    } as any;
     vi.mocked(parser.parsePlan).mockReturnValue({ planId: 'plan1', tasks: [mockTask] });
     vi.mocked(parser.determineNextTask).mockReturnValue(mockTask);
     vi.mocked(fs.existsSync).mockReturnValue(true);
-    
+
     // @ts-ignore
     p.select = vi.fn().mockResolvedValue('clean');
     vi.mocked(fs.rmSync).mockImplementation(() => {});
 
     vi.mocked(execution.checkClaudeSessionLimits).mockResolvedValue({ limitReached: false });
-    vi.mocked(execution.executeClaudeHeadless).mockResolvedValue({ success: true, exitCode: 0, sentinel: { type: 'SUCCESS' } });
-    vi.mocked(parser.updateTaskStatus).mockReturnValueOnce('plan content IN_PROGRESS').mockReturnValueOnce('plan content DONE');
+    vi.mocked(execution.executeClaudeHeadless).mockResolvedValue({
+      success: true,
+      exitCode: 0,
+      sentinel: { type: 'SUCCESS' },
+    });
+    vi.mocked(parser.updateTaskStatus)
+      .mockReturnValueOnce('plan content IN_PROGRESS')
+      .mockReturnValueOnce('plan content DONE');
 
     await runCommand({});
 
     expect(p.select).toHaveBeenCalled();
-    expect(fs.rmSync).toHaveBeenCalledWith(expect.stringContaining('worktrees'), { recursive: true, force: true });
+    expect(fs.rmSync).toHaveBeenCalledWith(expect.stringContaining('worktrees'), {
+      recursive: true,
+      force: true,
+    });
   });
 
   it('halts if existing worktree is found and halt is selected', async () => {
-    const mockTask = { id: '2', status: 'NOT_DONE', originalText: '- [ ] task 2', headingContext: '' } as any;
+    const mockTask = {
+      id: '2',
+      status: 'NOT_DONE',
+      originalText: '- [ ] task 2',
+      headingContext: '',
+    } as any;
     vi.mocked(parser.parsePlan).mockReturnValue({ planId: 'plan1', tasks: [mockTask] });
     vi.mocked(parser.determineNextTask).mockReturnValue(mockTask);
     vi.mocked(fs.existsSync).mockReturnValue(true);
-    
+
     // @ts-ignore
     p.select = vi.fn().mockResolvedValue('halt');
 

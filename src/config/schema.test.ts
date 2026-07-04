@@ -100,11 +100,11 @@ describe('configSchema', () => {
       sessionLimits: {
         showBeforeRun: true,
         pauseOnLimit: true,
-        resumeAfterReset: true // Invalid setting in MVP
+        resumeAfterReset: true, // Invalid setting in MVP
       },
       security: { deniedCommands: [], protectedPaths: [], allowNetwork: false },
     };
-    
+
     const result = configSchema.safeParse(config);
     expect(result.success).toBe(false);
   });
@@ -145,7 +145,9 @@ describe('verificationCommandSchema', () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].message).toContain('Verification command timeout cannot exceed 1 hour');
+      expect(result.error.issues[0].message).toContain(
+        'Verification command timeout cannot exceed 1 hour',
+      );
     }
   });
 });

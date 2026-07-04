@@ -1,9 +1,15 @@
 import { loadConfig } from '../config/loader.js';
 import { discoverPlan } from '../plans/discovery.js';
-import { parsePlan, ValidationError, determineNextTask, updateTaskStatus } from '../plans/parser.js';
+import {
+  parsePlan,
+  ValidationError,
+  determineNextTask,
+  updateTaskStatus,
+} from '../plans/parser.js';
 import { checkClaudeSessionLimits, executeClaudeHeadless } from '../executor/execution.js';
 import { loadPlanState, savePlanState, getTaskState } from '../executor/state.js';
 import { buildExecutionPrompt } from '../prompts/execution.js';
+import { isGitRepository, initializeGitRepository, resolveDefaultBranch } from '../git/repo.js';
 import fs from 'fs';
 import path from 'path';
 import * as p from '@clack/prompts';
@@ -20,13 +26,37 @@ export interface RunCommandOptions {
 export async function runCommand(options: RunCommandOptions): Promise<void> {
   p.intro(pc.bgBlue(pc.white(' Claude Orchestrator: Execution Phase ')));
 
+  const isGit = await isGitRepository();
+  if (!isGit) {
+    const action = await p.select({
+      message: 'This project is not a Git repository. Git is required for safe orchestration.',
+      options: [
+        { value: 'init', label: 'Initialize Git repository now' },
+        { value: 'halt', label: 'Halt execution' },
+      ],
+    });
+
+    if (p.isCancel(action) || action === 'halt') {
+      p.log.info(pc.yellow('Execution halted. Please initialize Git to continue.'));
+      process.exit(0);
+      return;
+    }
+
+    await initializeGitRepository();
+    p.log.success(pc.green('Git repository initialized.'));
+  }
+
   const config = await loadConfig(options.config);
+
+  const defaultBranchName = config.baseBranch || 'main';
+  const baseBranch = await resolveDefaultBranch(defaultBranchName);
+  p.log.info(`Using base branch: ${pc.cyan(baseBranch)}`);
 
   let planPath = options.plan;
   if (!planPath) {
     const defaultPlanDir = config.planDir || '.claude-orchestrator/plans';
     const discoveredPlan = await discoverPlan({ planDir: defaultPlanDir });
-    
+
     if (!discoveredPlan) {
       process.exit(0);
     }
@@ -81,7 +111,7 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
 
   const worktreeDir = config.worktreeDir || '.claude-orchestrator/worktrees';
   const taskWorktree = path.join(process.cwd(), worktreeDir, parsedPlan.planId, nextTask.id);
-  
+
   if (fs.existsSync(taskWorktree)) {
     const action = await p.select({
       message: `Existing worktree found at ${taskWorktree}. How would you like to proceed?`,
@@ -97,7 +127,7 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
       process.exit(0);
       return;
     }
-    
+
     if (action === 'clean') {
       fs.rmSync(taskWorktree, { recursive: true, force: true });
     }
@@ -109,7 +139,13 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
     lastVerificationError: taskState.lastVerificationError,
   };
 
-  const prompt = buildExecutionPrompt(planPath, nextTask.originalText, nextTask.id, taskWorktree, retryContext);
+  const prompt = buildExecutionPrompt(
+    planPath,
+    nextTask.originalText,
+    nextTask.id,
+    taskWorktree,
+    retryContext,
+  );
   const abortController = new AbortController();
   const onSigInt = () => {
     p.log.warn(pc.yellow('\nReceived SIGINT. Cancelling current task...'));
@@ -119,7 +155,13 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
 
   let outcome;
   try {
-    outcome = await executeClaudeHeadless(config, prompt, taskLogDir, nextTask.id, abortController.signal);
+    outcome = await executeClaudeHeadless(
+      config,
+      prompt,
+      taskLogDir,
+      nextTask.id,
+      abortController.signal,
+    );
   } finally {
     process.off('SIGINT', onSigInt);
   }
@@ -149,31 +191,32 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
   } else {
     p.log.error(pc.red(`Claude execution failed: ${outcome.error}`));
     if (outcome.interrupted) {
-       // Leave task as IN_PROGRESS
-       taskState.lastStatus = 'IN_PROGRESS';
-       await savePlanState(state, config);
-       p.log.warn(pc.yellow(`Task interrupted. Worktree preserved at ${taskWorktree}.`));
-       p.log.info(`Resume command: claude-orchestrator run --plan ${planPath}`);
-       process.exit(130); // 130 is standard for SIGINT exit
+      // Leave task as IN_PROGRESS
+      taskState.lastStatus = 'IN_PROGRESS';
+      await savePlanState(state, config);
+      p.log.warn(pc.yellow(`Task interrupted. Worktree preserved at ${taskWorktree}.`));
+      p.log.info(`Resume command: claude-orchestrator run --plan ${planPath}`);
+      process.exit(130); // 130 is standard for SIGINT exit
     } else if (outcome.sessionLimitReached) {
-       taskState.lastStatus = 'BLOCKED';
-       taskState.limitResetTime = outcome.limitResetTime;
-       taskState.limitMessage = outcome.error;
-       await savePlanState(state, config);
+      taskState.lastStatus = 'BLOCKED';
+      taskState.limitResetTime = outcome.limitResetTime;
+      taskState.limitMessage = outcome.error;
+      await savePlanState(state, config);
 
-       p.log.warn(pc.yellow(`Session limit reached. Resets in ${outcome.limitResetTime || 'unknown'}.`));
-       p.log.info(`Resume command: claude-orchestrator run --plan ${planPath}`);
+      p.log.warn(
+        pc.yellow(`Session limit reached. Resets in ${outcome.limitResetTime || 'unknown'}.`),
+      );
+      p.log.info(`Resume command: claude-orchestrator run --plan ${planPath}`);
     } else {
-       taskState.lastStatus = 'FAILED';
-       taskState.lastError = outcome.error;
-       await savePlanState(state, config);
+      taskState.lastStatus = 'FAILED';
+      taskState.lastError = outcome.error;
+      await savePlanState(state, config);
 
-       const failPlanContent = updateTaskStatus(updatedPlanContent, nextTask, 'FAILED');
-       fs.writeFileSync(planPath, failPlanContent, 'utf8');
-       p.log.error(pc.red('Marked task as FAILED.'));
+      const failPlanContent = updateTaskStatus(updatedPlanContent, nextTask, 'FAILED');
+      fs.writeFileSync(planPath, failPlanContent, 'utf8');
+      p.log.error(pc.red('Marked task as FAILED.'));
     }
   }
 
   p.outro(pc.green('Execution engine iteration complete.'));
 }
-

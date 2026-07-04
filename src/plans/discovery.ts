@@ -17,12 +17,20 @@ export async function discoverPlan(options: PlanDiscoveryOptions): Promise<strin
       .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
       .map((entry) => entry.name);
   } catch (error: unknown) {
-    if (error && typeof error === 'object' && 'code' in error && (error as { code: string }).code === 'ENOENT') {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      (error as { code: string }).code === 'ENOENT'
+    ) {
       p.log.warn(`Plan directory ${resolvedPlanDir} does not exist.`);
       p.log.info(`Run ${pc.cyan('claude-orchestrator plan')} to create a plan.`);
       return null;
     }
-    throw new Error(`Failed to read plan directory: ${error instanceof Error ? error.message : String(error)}`, { cause: error });
+    throw new Error(
+      `Failed to read plan directory: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
+    );
   }
 
   if (files.length === 0) {
@@ -41,7 +49,7 @@ export async function discoverPlan(options: PlanDiscoveryOptions): Promise<strin
         label: file,
         hint: `Last modified: ${stats.mtime.toLocaleString()}`,
       };
-    })
+    }),
   );
 
   // Sort by modification time, newest first

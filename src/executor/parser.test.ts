@@ -44,7 +44,11 @@ describe('extractOrchestratorResult', () => {
 
   it('should extract BLOCKED sentinel without reason as unknown', () => {
     const result = extractOrchestratorResult('output\nORCHESTRATOR_RESULT: BLOCKED\nend');
-    expect(result).toEqual({ type: 'BLOCKED', reason: 'Unknown block reason', handoffNotes: 'output' });
+    expect(result).toEqual({
+      type: 'BLOCKED',
+      reason: 'Unknown block reason',
+      handoffNotes: 'output',
+    });
   });
 
   it('should extract NEEDS_RETRY_CONTEXT sentinel', () => {

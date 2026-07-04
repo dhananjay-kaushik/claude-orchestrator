@@ -37,11 +37,11 @@ export async function checkClaudeSessionLimits(config: Config): Promise<SessionL
 
     try {
       const parsed = JSON.parse(result.stdout);
-      
+
       let limitReached = false;
       let resetTime: string | undefined;
       const msg = parsed.result || '';
-      
+
       if (msg.match(/limit reached|usage limit/i)) {
         limitReached = true;
         const resetMatch = msg.match(/resets? in ([a-zA-Z0-9 ]+)/i);
@@ -62,8 +62,12 @@ export async function checkClaudeSessionLimits(config: Config): Promise<SessionL
   } catch (error: any) {
     let limitReached = false;
     let resetTime: string | undefined;
-    
-    const errorMsg = [error?.message, String(error?.stdout || ''), String(error?.stderr || '')].join(' ');
+
+    const errorMsg = [
+      error?.message,
+      String(error?.stdout || ''),
+      String(error?.stderr || ''),
+    ].join(' ');
     if (errorMsg.match(/limit reached|usage limit/i)) {
       limitReached = true;
       const resetMatch = errorMsg.match(/resets? in ([a-zA-Z0-9 ]+)/i);
@@ -71,7 +75,7 @@ export async function checkClaudeSessionLimits(config: Config): Promise<SessionL
         resetTime = resetMatch[1].trim();
       }
     }
-    
+
     return {
       limitReached,
       resetTime,
@@ -85,7 +89,7 @@ export async function executeClaudeHeadless(
   prompt: string,
   logDir: string,
   taskId: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<ExecutionOutcome> {
   const { command, args } = buildClaudeCommand(config, prompt);
 
@@ -122,7 +126,7 @@ export async function executeClaudeHeadless(
       let sessionLimitReached = false;
       let limitResetTime: string | undefined;
       const errorMsg = parsed.result || '';
-      
+
       if (errorMsg.match(/limit reached|usage limit/i)) {
         sessionLimitReached = true;
         const resetMatch = errorMsg.match(/resets? in ([a-zA-Z0-9 ]+)/i);
@@ -197,7 +201,11 @@ export async function executeClaudeHeadless(
     let sessionLimitReached = false;
     let limitResetTime: string | undefined;
 
-    const errorMsg = [error?.message, String(error?.stdout || ''), String(error?.stderr || '')].join(' ');
+    const errorMsg = [
+      error?.message,
+      String(error?.stdout || ''),
+      String(error?.stderr || ''),
+    ].join(' ');
     if (errorMsg.match(/limit reached|usage limit/i)) {
       sessionLimitReached = true;
       const resetMatch = errorMsg.match(/resets? in ([a-zA-Z0-9 ]+)/i);
