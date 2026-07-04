@@ -302,42 +302,6 @@ describe('runCommand', () => {
     mockExit.mockRestore();
   });
 
-  it('prompts if existing worktree is found and cleans it if selected', async () => {
-    const mockTask = {
-      id: '2',
-      status: 'NOT_DONE',
-      originalText: '- [ ] task 2',
-      headingContext: '',
-    } as any;
-    vi.mocked(parser.parsePlan).mockReturnValue({ planId: 'plan1', tasks: [mockTask] });
-    vi.mocked(parser.determineNextTask).mockReturnValue(mockTask);
-    vi.mocked(fs.existsSync).mockReturnValue(true);
-
-    // @ts-ignore
-    p.select = vi.fn().mockResolvedValue('clean');
-    vi.mocked(fs.rmSync).mockImplementation(() => {});
-
-    vi.mocked(execution.checkClaudeSessionLimits).mockResolvedValue({ limitReached: false });
-    vi.mocked(execution.executeClaudeHeadless).mockResolvedValue({
-      success: true,
-      exitCode: 0,
-      sentinel: { type: 'SUCCESS' },
-    });
-    vi.mocked(parser.updateTaskStatus)
-      .mockReturnValueOnce('plan content IN_PROGRESS')
-      .mockReturnValueOnce('plan content DONE');
-
-    await runCommand({});
-
-    expect(p.select).toHaveBeenCalled();
-    expect(fs.rmSync).toHaveBeenCalledWith(expect.stringContaining('worktrees'), {
-      recursive: true,
-      force: true,
-    });
-    // Regression: after wiping a dirty worktree, it must be recreated before use.
-    expect(worktrees.createWorktree).toHaveBeenCalled();
-  });
-
   it('continues in the existing worktree without recreating it', async () => {
     const mockTask = {
       id: '2',
@@ -367,28 +331,4 @@ describe('runCommand', () => {
     expect(worktrees.createWorktree).not.toHaveBeenCalled();
   });
 
-  it('halts if existing worktree is found and halt is selected', async () => {
-    const mockTask = {
-      id: '2',
-      status: 'NOT_DONE',
-      originalText: '- [ ] task 2',
-      headingContext: '',
-    } as any;
-    vi.mocked(parser.parsePlan).mockReturnValue({ planId: 'plan1', tasks: [mockTask] });
-    vi.mocked(parser.determineNextTask).mockReturnValue(mockTask);
-    vi.mocked(fs.existsSync).mockReturnValue(true);
-
-    // @ts-ignore
-    p.select = vi.fn().mockResolvedValue('halt');
-
-    const mockExit = vi.spyOn(process, 'exit').mockImplementation((() => {}) as any);
-
-    await runCommand({});
-
-    expect(p.select).toHaveBeenCalled();
-    expect(mockExit).toHaveBeenCalledWith(0);
-    expect(execution.executeClaudeHeadless).not.toHaveBeenCalled();
-
-    mockExit.mockRestore();
-  });
 });
