@@ -458,7 +458,7 @@ This project must be built with a test-driven development approach. For every pa
   - Forbid force push, reset hard, clean, rebase, and history rewrite operations.
   - Keep all Git operations non-destructive and auditable.
 
-- [ ] Build per-task worktree utilities.
+- [-] Build per-task worktree utilities.
   - Create one isolated worktree per task attempt or reusable task ID according to config.
   - Derive worktree branch names from plan ID and stable task ID.
   - Detect existing dirty worktrees before execution or resume.
