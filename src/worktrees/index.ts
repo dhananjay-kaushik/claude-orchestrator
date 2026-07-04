@@ -78,6 +78,22 @@ export async function createWorktree(
 }
 
 /**
+ * Merges a completed task branch into the base branch from the main worktree.
+ * Refuses if the main worktree itself has uncommitted changes, since checkout would clobber them.
+ */
+export async function mergeWorktreeBranch(
+  branchName: string,
+  baseBranch: string,
+  cwd = process.cwd()
+): Promise<void> {
+  if (await hasUncommittedChanges(cwd)) {
+    throw new Error(`Cannot auto-merge: ${cwd} has uncommitted changes.`);
+  }
+  await execa('git', ['checkout', baseBranch], { cwd });
+  await execa('git', ['merge', '--no-edit', branchName], { cwd });
+}
+
+/**
  * Removes a worktree if it is clean. Never deletes a dirty worktree automatically.
  */
 export async function removeWorktree(worktreePath: string, cwd = process.cwd()): Promise<void> {

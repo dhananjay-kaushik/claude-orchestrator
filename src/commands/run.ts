@@ -11,7 +11,7 @@ import { runVerification } from '../executor/verification.js';
 import { loadPlanState, savePlanState, getTaskState } from '../executor/state.js';
 import { buildExecutionPrompt } from '../prompts/execution.js';
 import { isGitRepository, initializeGitRepository, resolveDefaultBranch } from '../git/repo.js';
-import { getWorktreeBranchName, createWorktree } from '../worktrees/index.js';
+import { getWorktreeBranchName, createWorktree, mergeWorktreeBranch, removeWorktree } from '../worktrees/index.js';
 import {
   stageAllChanges,
   hasStagedChanges,
@@ -179,10 +179,22 @@ async function runOneTask(
 
     if (allDone) {
       const branchName = getWorktreeBranchName(parsedPlan.planId);
+      const worktreeDir = config.worktreeDir || '.claude-orchestrator/worktrees';
+      const taskWorktree = path.join(process.cwd(), worktreeDir, parsedPlan.planId);
       p.log.info(`Work Branch:     ${branchName}`);
-      p.log.info(
-        pc.cyan(`To bring this work into another branch: git checkout <your-feature-branch> && git merge ${branchName}`),
-      );
+
+      try {
+        await mergeWorktreeBranch(branchName, baseBranch);
+        p.log.success(pc.green(`Merged ${branchName} into ${baseBranch}.`));
+        await removeWorktree(taskWorktree);
+        p.log.success(pc.green(`Removed worktree ${taskWorktree}.`));
+      } catch (error: any) {
+        p.log.warn(
+          pc.yellow(
+            `Could not auto-merge/clean up: ${error.message}\nTo bring this work into another branch: git checkout <your-feature-branch> && git merge ${branchName}`,
+          ),
+        );
+      }
     }
     process.exit(0);
     return;
