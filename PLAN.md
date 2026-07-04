@@ -8,10 +8,10 @@ This project must be built with a test-driven development approach. For every pa
 
 ## Task Status Tracker
 
-- **Total**: 57
-- **NOT_DONE**: 5
+- **Total**: 58
+- **NOT_DONE**: 2
 - **IN_PROGRESS**: 0
-- **DONE**: 52
+- **DONE**: 56
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -559,7 +559,7 @@ This project must be built with a test-driven development approach. For every pa
 
 ## Phase 9: Packaging, Documentation & Post-MVP Boundaries
 
-- [ ] Keep notifications out of MVP.
+- [x] Keep notifications out of MVP.
   - Desktop notifications are post-MVP.
   - Webhooks are post-MVP.
   - Automatic resume after session reset is post-MVP.
