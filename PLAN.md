@@ -9,9 +9,9 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 28
-- **IN_PROGRESS**: 1
-- **DONE**: 28
+- **NOT_DONE**: 25
+- **IN_PROGRESS**: 0
+- **DONE**: 32
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -272,7 +272,7 @@ This project must be built with a test-driven development approach. For every pa
   - `FAILED`: `- [f]`, `- [F]`, `* [f]`, or `* [F]`.
   - `BLOCKED`: `- [b]`, `- [B]`, `* [b]`, or `* [B]`.
 
-- [-] Build the Markdown parser utility.
+- [x] Build the Markdown parser utility.
   - Parse task lines while preserving original text, bullet marker, indentation, and surrounding Markdown.
   - Capture stable task identity using a deterministic slug/hash of normalized task text and heading context.
   - Do not include line number in the persisted task identity because handoff notes and Markdown edits can shift lines.
@@ -284,14 +284,14 @@ This project must be built with a test-driven development approach. For every pa
     - Consider `FAILED` only when retry count is below `maxRetries`.
     - Do not proceed past a `BLOCKED` task unless the user explicitly chooses to skip or unblock it.
 
-- [ ] Implement safe Markdown status updates.
+- [x] Implement safe Markdown status updates.
   - Change only the checkbox marker for a selected task.
   - Preserve indentation, list marker style, spacing, task text, comments, and nearby custom formatting.
   - Do not rewrite the full Markdown file with a formatter.
   - For MVP, use tightly scoped regex replacement against the exact parsed line.
   - If regex preservation becomes fragile, switch to a Markdown AST approach, but only if formatting can still be preserved.
 
-- [ ] Add plan parser and updater tests immediately.
+- [x] Add plan parser and updater tests immediately.
   - Test all supported checkbox statuses and both `-` and `*` bullets.
   - Test uppercase and lowercase status markers.
   - Test nested tasks and indented checkboxes.
@@ -305,7 +305,7 @@ This project must be built with a test-driven development approach. For every pa
   - Test task IDs remain stable when handoff notes or unrelated lines are inserted above later tasks.
   - Test line numbers are never used as persistent state keys.
 
-- [ ] Define execution state storage.
+- [x] Define execution state storage.
   - Store retry counts outside the Markdown file so custom formatting is not polluted.
   - Use `stateDir` for per-plan state keyed by a stable plan identifier.
   - Use stable task slug/hash IDs for per-task state.

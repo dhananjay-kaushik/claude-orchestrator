@@ -1,31 +1,41 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { Config, OrchestratorResult } from '../types/index.js';
+import { Config, PlanState, ExecutionTaskState } from '../types/index.js';
 
-export async function saveTaskExecutionResult(
-  config: Config,
-  planId: string,
-  taskId: string,
-  rawJson: string,
-  sentinel: OrchestratorResult | null,
-): Promise<void> {
-  const stateDir = path.resolve(process.cwd(), config.stateDir, planId);
-  await fs.mkdir(stateDir, { recursive: true });
+export async function loadPlanState(planId: string, config: Config): Promise<PlanState> {
+  const stateDir = path.resolve(process.cwd(), config.stateDir);
+  const stateFile = path.join(stateDir, `${planId}.json`);
 
-  const stateFile = path.join(stateDir, `${taskId}.json`);
-
-  // Try to load existing state if it exists, to not overwrite other fields
-  let state: any = {};
   try {
     const existing = await fs.readFile(stateFile, 'utf-8');
-    state = JSON.parse(existing);
-  } catch (e) {
-    // File might not exist or be corrupt, start fresh
+    return JSON.parse(existing) as PlanState;
+  } catch (e: any) {
+    if (e.code !== 'ENOENT') {
+      console.warn(`Warning: Failed to parse state file for plan ${planId}: ${e.message}`);
+    }
+    return { planId, tasks: {} };
   }
+}
 
-  state.rawJson = rawJson;
-  state.sentinel = sentinel;
-  state.timestamp = new Date().toISOString();
+export async function savePlanState(state: PlanState, config: Config): Promise<void> {
+  const stateDir = path.resolve(process.cwd(), config.stateDir);
+  await fs.mkdir(stateDir, { recursive: true });
 
+  const stateFile = path.join(stateDir, `${state.planId}.json`);
   await fs.writeFile(stateFile, JSON.stringify(state, null, 2), 'utf-8');
+}
+
+export function getTaskState(state: PlanState, taskId: string): ExecutionTaskState {
+  if (!state.tasks[taskId]) {
+    state.tasks[taskId] = {
+      id: taskId,
+      attempts: 0,
+      lastStatus: 'NOT_DONE',
+      logFilePaths: [],
+      claudeExitCodes: [],
+      jsonResponsePaths: [],
+      verificationResults: [],
+    };
+  }
+  return state.tasks[taskId];
 }

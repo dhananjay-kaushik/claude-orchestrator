@@ -129,3 +129,27 @@ export interface ClaudeJSONResponse {
   session_id?: string;
   is_error?: boolean;
 }
+
+/**
+ * Execution State Storage
+ */
+export interface ExecutionTaskState {
+  id: string; // stable slug/hash
+  attempts: number;
+  lastStatus: TaskStatus;
+  logFilePaths: string[];
+  claudeExitCodes: (number | null)[];
+  claudeSessionId?: string;
+  jsonResponsePaths: string[];
+  verificationResults: (VerificationResult | null)[];
+  worktreePath?: string;
+  commitHash?: string;
+  handoffNotes?: string;
+  limitResetTime?: string;
+  limitMessage?: string;
+}
+
+export interface PlanState {
+  planId: string;
+  tasks: Record<string, ExecutionTaskState>;
+}
