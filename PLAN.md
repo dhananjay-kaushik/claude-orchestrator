@@ -10,8 +10,8 @@ This project must be built with a test-driven development approach. For every pa
 
 - **Total**: 57
 - **NOT_DONE**: 5
-- **IN_PROGRESS**: 1
-- **DONE**: 51
+- **IN_PROGRESS**: 0
+- **DONE**: 52
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -528,7 +528,7 @@ This project must be built with a test-driven development approach. For every pa
   - Keep terminal output concise by default while preserving full details in log files.
   - Print the detailed log file path at the end of each task and at plan completion.
 
-- [-] Implement token, usage, cost, and session tracking.
+- [x] Implement token, usage, cost, and session tracking.
   - Read `usage`, `total_cost_usd`, and `session_id` from Claude JSON responses.
   - Store the raw Claude JSON response as evidence.
   - Treat missing structured JSON fields as schema/compatibility issues, not regex parsing problems.
