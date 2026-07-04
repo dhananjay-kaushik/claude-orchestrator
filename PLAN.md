@@ -9,8 +9,8 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 29
-- **IN_PROGRESS**: 0
+- **NOT_DONE**: 28
+- **IN_PROGRESS**: 1
 - **DONE**: 28
 - **FAILED**: 0
 - **BLOCKED**: 0
@@ -272,7 +272,7 @@ This project must be built with a test-driven development approach. For every pa
   - `FAILED`: `- [f]`, `- [F]`, `* [f]`, or `* [F]`.
   - `BLOCKED`: `- [b]`, `- [B]`, `* [b]`, or `* [B]`.
 
-- [ ] Build the Markdown parser utility.
+- [-] Build the Markdown parser utility.
   - Parse task lines while preserving original text, bullet marker, indentation, and surrounding Markdown.
   - Capture stable task identity using a deterministic slug/hash of normalized task text and heading context.
   - Do not include line number in the persisted task identity because handoff notes and Markdown edits can shift lines.

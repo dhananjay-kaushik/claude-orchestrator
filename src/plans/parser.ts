@@ -79,3 +79,51 @@ export function parsePlan(planContent: string, planId: string): PlanParseResult 
 
   return { planId, tasks };
 }
+
+export function determineNextTask(
+  tasks: TaskState[],
+  maxRetries: number,
+  retryCounts: Record<string, number>
+): TaskState | undefined {
+  const inProgress = tasks.find(t => t.status === 'IN_PROGRESS');
+  if (inProgress) return inProgress;
+
+  for (const task of tasks) {
+    if (task.status === 'DONE') continue;
+
+    if (task.status === 'BLOCKED') {
+      return undefined;
+    }
+
+    if (task.status === 'FAILED') {
+      const retries = retryCounts[task.id] || 0;
+      if (retries < maxRetries) {
+        return task;
+      }
+      return undefined; // Out of retries, halt
+    }
+
+    if (task.status === 'NOT_DONE') {
+      return task;
+    }
+  }
+  return undefined;
+}
+
+export function updateTaskStatus(
+  planContent: string,
+  taskToUpdate: TaskState,
+  newStatus: TaskStatus
+): string {
+  const lines = planContent.split('\n');
+  const index = lines.findIndex(line => line === taskToUpdate.originalText);
+  
+  if (index === -1) {
+    throw new Error('Task line not found in plan content.');
+  }
+
+  const checkboxRegex = /^(\s*)([-*])\s+\[(.*?)\](\s+.*)$/;
+  lines[index] = lines[index].replace(checkboxRegex, `$1$2 [${newStatus === 'NOT_DONE' ? ' ' : newStatus === 'IN_PROGRESS' ? '-' : newStatus === 'DONE' ? 'x' : newStatus === 'FAILED' ? 'f' : 'b'}]$4`);
+  
+  return lines.join('\n');
+}
