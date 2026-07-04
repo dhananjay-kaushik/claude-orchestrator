@@ -10,8 +10,8 @@ This project must be built with a test-driven development approach. For every pa
 
 - **Total**: 57
 - **NOT_DONE**: 18
-- **IN_PROGRESS**: 1
-- **DONE**: 38
+- **IN_PROGRESS**: 0
+- **DONE**: 39
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -385,7 +385,7 @@ This project must be built with a test-driven development approach. For every pa
   - Capture exit codes and signals without crashing the parent CLI.
   - Redact secret-looking values before writing logs.
 
-- [-] Design the Claude execution prompt carefully.
+- [x] Design the Claude execution prompt carefully.
   - Include the selected plan path and selected task text.
   - Include stable task ID, worktree path, and expected sentinel format.
   - Tell Claude to implement only the selected task.
