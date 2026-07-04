@@ -26,8 +26,16 @@
     "orchestrator",
     "cli"
   ],
-  "author": "",
+  "author": "Dhananjay Kaushik",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dhananjay-kaushik/claude-orchestrator.git"
+  },
+  "homepage": "https://github.com/dhananjay-kaushik/claude-orchestrator#readme",
+  "bugs": {
+    "url": "https://github.com/dhananjay-kaushik/claude-orchestrator/issues"
+  },
   "engines": {
     "node": ">=18.0.0"
   },

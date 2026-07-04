@@ -10,7 +10,25 @@ Claude task sessions do not mark tasks `DONE`, do not commit, and do not decide 
 
 ## Status
 
-This repository is currently in the planning/scaffolding stage. The implementation contract is documented in [PLAN.md](/Users/iambesttt/Developer/Projects/claude-orchestrator/PLAN.md), [SKILLS.md](/Users/iambesttt/Developer/Projects/claude-orchestrator/SKILLS.md), and [AGENTS.md](/Users/iambesttt/Developer/Projects/claude-orchestrator/AGENTS.md).
+The MVP described below is implemented and tested. The original implementation contract is documented in [PLAN.md](./PLAN.md), [SKILLS.md](./SKILLS.md), and [AGENTS.md](./AGENTS.md).
+
+## Installation
+
+```bash
+npm install -g claude-orchestrator
+```
+
+Requires Node.js >= 18 and the `claude` CLI on your `PATH`.
+
+## Quick Start
+
+```bash
+cd your-project
+claude-orchestrator init      # create .claude-orchestrator.json
+claude-orchestrator plan      # generate a Markdown task plan
+claude-orchestrator run       # execute the next task
+claude-orchestrator run --loop  # execute tasks until one needs attention
+```
 
 ## Workflow
 
@@ -212,17 +230,14 @@ Logs include:
 - command policy decisions
 - summary reports
 
-### `claude-orchestrator resume`
+### Resuming interrupted work
 
-Continue an interrupted, `IN_PROGRESS`, or `BLOCKED: SESSION_LIMIT` task.
+There is no separate `resume` command. An interrupted, `IN_PROGRESS`, or `BLOCKED: SESSION_LIMIT` task is just state on disk, so re-running `claude-orchestrator run --plan <path>` picks it back up automatically:
 
-Expected behavior:
-
-- Validate config and plan again.
-- Detect dirty task worktree state.
-- Prompt whether to continue in the existing worktree, retry from clean base, or halt.
-- Preserve previous logs and retry context.
-- Continue without consuming retry budget for session-limit pauses.
+- Re-validates config and plan.
+- Detects dirty task worktree state and prompts whether to continue in the existing worktree, retry from a clean base, or halt.
+- Preserves previous logs and retry context.
+- Does not consume retry budget for session-limit pauses.
 
 ## Configuration
 
