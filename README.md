@@ -42,6 +42,10 @@ Tasks use a strict 5-state Markdown checkbox format:
 
 Task identity is based on a stable slug/hash of normalized task text and heading context. Line numbers are not used as persistent task IDs because plan files can change as handoff notes or content are added.
 
+Task text must be unique across the whole plan, not just within a section — the parser rejects a plan with two tasks that read the same, even under different headings.
+
+Add a Status Tracker section near the top with running counts (`Total`, `NOT_DONE`, `IN_PROGRESS`, `DONE`, `FAILED`, `BLOCKED`) — the orchestrator's planning prompt generates one, and it's the fastest way for a human or a resumed session to see plan progress at a glance.
+
 ## Claude Execution Contract
 
 Planning and execution use different Claude modes:

@@ -35,7 +35,7 @@ RULES:
 1. Do not continue to later tasks.
 2. Do not commit any changes.
 3. Do not mark the task as DONE in the plan file.
-4. Include a concise handoff note in the JSON \`result\` field.
+4. Include a concise handoff note in the JSON \`result\` field, before the sentinel line. It is shown to the user in the run summary, so cover: what you changed (files/areas touched), how you verified it, and anything the next task or a human reviewer should know (deviations from the plan, follow-ups, open questions).
 5. You MUST end your JSON \`result\` field with exactly one of the following sentinels:
    - \`ORCHESTRATOR_RESULT: SUCCESS\` (if you completed the task)
    - \`ORCHESTRATOR_RESULT: BLOCKED\` (if you are blocked by user input, credentials, permissions, or missing context)
