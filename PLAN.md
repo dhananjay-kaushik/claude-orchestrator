@@ -9,9 +9,9 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 31
+- **NOT_DONE**: 30
 - **IN_PROGRESS**: 1
-- **DONE**: 25
+- **DONE**: 26
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -252,13 +252,13 @@ This project must be built with a test-driven development approach. For every pa
 
 ## Phase 4: Plan Parser, State Model & Safe Markdown Updates
 
-- [-] Implement `run` command plan discovery.
+- [x] Implement `run` command plan discovery.
   - Scan the configured `planDir` for `.md` files.
   - Present an interactive selector.
   - Show useful metadata where available, such as last modified time and remaining task count.
   - Handle empty plan directories with a prompt to run `claude-orchestrator plan`.
 
-- [ ] Validate plan files before execution.
+- [-] Validate plan files before execution.
   - Require at least one recognized task checkbox.
   - Reject ambiguous checkbox markers outside the supported 5-state system.
   - Reject duplicate task identities only if they would make state tracking unsafe.
