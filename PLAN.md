@@ -9,9 +9,9 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 56
-- **NOT_DONE**: 51
+- **NOT_DONE**: 50
 - **IN_PROGRESS**: 0
-- **DONE**: 5
+- **DONE**: 6
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -97,7 +97,7 @@ This project must be built with a test-driven development approach. For every pa
   - `src/logging/` for per-task logs, token extraction, and run summaries.
   - `src/types/` for shared TypeScript interfaces.
 
-- [ ] Create the executable entry point.
+- [x] Create the executable entry point.
   - Add a small `bin/claude-orchestrator.js` shim that loads the compiled CLI.
   - Ensure package `bin` points to the executable.
   - Verify the built CLI can be invoked locally.
