@@ -49,7 +49,11 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
     throw error;
   }
 
+  const state = await loadPlanState(parsedPlan.planId, config);
   const retryCounts: Record<string, number> = {};
+  for (const [taskId, taskState] of Object.entries(state.tasks)) {
+    retryCounts[taskId] = Math.max(0, taskState.attempts - 1);
+  }
   const nextTask = determineNextTask(parsedPlan.tasks, config.maxRetries || 3, retryCounts);
 
   if (!nextTask) {
@@ -77,11 +81,15 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
 
   const worktreeDir = config.worktreeDir || '.claude-orchestrator/worktrees';
   const taskWorktree = path.join(process.cwd(), worktreeDir, parsedPlan.planId, nextTask.id);
-  const prompt = buildExecutionPrompt(planPath, nextTask.originalText, nextTask.id, taskWorktree);
+  const taskState = getTaskState(state, nextTask.id);
+  const retryContext = {
+    lastError: taskState.lastError,
+    lastVerificationError: taskState.lastVerificationError,
+  };
+
+  const prompt = buildExecutionPrompt(planPath, nextTask.originalText, nextTask.id, taskWorktree, retryContext);
   const outcome = await executeClaudeHeadless(config, prompt, taskLogDir, nextTask.id);
 
-  const state = await loadPlanState(parsedPlan.planId, config);
-  const taskState = getTaskState(state, nextTask.id);
   taskState.attempts += 1;
   taskState.claudeExitCodes.push(outcome.exitCode ?? null);
 
@@ -115,6 +123,7 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
        p.log.warn(pc.yellow(`Session limit reached. Resets in ${outcome.limitResetTime || 'unknown'}.`));
     } else {
        taskState.lastStatus = 'FAILED';
+       taskState.lastError = outcome.error;
        await savePlanState(state, config);
 
        const failPlanContent = updateTaskStatus(updatedPlanContent, nextTask, 'FAILED');

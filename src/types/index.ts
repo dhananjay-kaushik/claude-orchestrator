@@ -149,6 +149,8 @@ export interface ExecutionTaskState {
   handoffNotes?: string;
   limitResetTime?: string;
   limitMessage?: string;
+  lastError?: string;
+  lastVerificationError?: string;
 }
 
 export interface PlanState {

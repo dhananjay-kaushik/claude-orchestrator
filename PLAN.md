@@ -397,7 +397,7 @@ This project must be built with a test-driven development approach. For every pa
   - Tell Claude not to edit secret files or credential files.
   - Tell Claude not to run destructive Git operations.
 
-- [ ] Implement retry behavior.
+- [-] Implement retry behavior.
   - Increment retry count when Claude fails or verification fails.
   - Include previous verification stderr/stdout excerpts and previous Claude failure summary in the retry prompt.
   - Keep retry context concise and redacted.
