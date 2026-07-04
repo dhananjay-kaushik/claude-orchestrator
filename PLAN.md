@@ -8,10 +8,10 @@ This project must be built with a test-driven development approach. For every pa
 
 ## Task Status Tracker
 
-- **Total**: 56
+- **Total**: 57
 - **NOT_DONE**: 49
 - **IN_PROGRESS**: 0
-- **DONE**: 7
+- **DONE**: 8
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -84,6 +84,11 @@ This project must be built with a test-driven development approach. For every pa
   - Consider `zod` or a similar validator for `.claude-orchestrator.json` parsing.
   - Do not install `node-notifier` in MVP; notifications are post-MVP.
   - Do not add broad shell helper dependencies that encourage unvalidated command execution.
+
+- [x] Migrate to pnpm package manager.
+  - Delete `package-lock.json` and `node_modules`.
+  - Install dependencies using `pnpm install` and create `pnpm-lock.yaml`.
+  - Update scripts and tests to use `pnpm` instead of `npm`.
 
 - [x] Define the source tree.
   - `src/cli.ts` for top-level command registration.
