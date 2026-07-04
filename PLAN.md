@@ -9,9 +9,9 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 13
+- **NOT_DONE**: 12
 - **IN_PROGRESS**: 0
-- **DONE**: 44
+- **DONE**: 45
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -458,7 +458,7 @@ This project must be built with a test-driven development approach. For every pa
   - Forbid force push, reset hard, clean, rebase, and history rewrite operations.
   - Keep all Git operations non-destructive and auditable.
 
-- [-] Build per-task worktree utilities.
+- [x] Build per-task worktree utilities.
   - Create one isolated worktree per task attempt or reusable task ID according to config.
   - Derive worktree branch names from plan ID and stable task ID.
   - Detect existing dirty worktrees before execution or resume.
