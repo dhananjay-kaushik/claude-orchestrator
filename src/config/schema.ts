@@ -39,7 +39,7 @@ export const configSchema = z.object({
   sessionLimits: z.object({
     showBeforeRun: z.boolean(),
     pauseOnLimit: z.boolean(),
-  }),
+  }).strict(),
   security: z.object({
     allowedCommands: z.array(z.string()).optional(),
     deniedCommands: z.array(z.string()),

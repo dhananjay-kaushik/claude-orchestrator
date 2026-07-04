@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { validateVerificationCommand, validateClaudePermissions, PolicyViolationError } from './policy.js';
+import {
+  validateVerificationCommand,
+  validateClaudePermissions,
+  PolicyViolationError,
+} from './policy.js';
 import { Config, VerificationCommand } from '../types/index.js';
 
 describe('policy validation', () => {
@@ -35,13 +39,29 @@ describe('policy validation', () => {
     });
 
     it('blocks custom denied commands', () => {
-      const config = { ...baseConfig, security: { ...baseConfig.security, deniedCommands: ['dangerous-tool'] } };
+      const config = {
+        ...baseConfig,
+        security: { ...baseConfig.security, deniedCommands: ['dangerous-tool'] },
+      };
       const cmd: VerificationCommand = { command: 'dangerous-tool', args: [], timeoutMs: 1000 };
       expect(() => validateVerificationCommand(config, cmd)).toThrowError(PolicyViolationError);
     });
 
+    it('blocks built-in denied commands even if added to allowedCommands', () => {
+      const config = {
+        ...baseConfig,
+        security: { ...baseConfig.security, allowedCommands: ['rm'] },
+      };
+      const cmd: VerificationCommand = { command: 'rm', args: ['-rf', '/'], timeoutMs: 1000 };
+      expect(() => validateVerificationCommand(config, cmd)).toThrowError(PolicyViolationError);
+    });
+
     it('blocks destructive git commands', () => {
-      const cmd: VerificationCommand = { command: 'git', args: ['reset', '--hard'], timeoutMs: 1000 };
+      const cmd: VerificationCommand = {
+        command: 'git',
+        args: ['reset', '--hard'],
+        timeoutMs: 1000,
+      };
       expect(() => validateVerificationCommand(baseConfig, cmd)).toThrowError(PolicyViolationError);
     });
 
@@ -51,15 +71,22 @@ describe('policy validation', () => {
     });
 
     it('blocks shell fragments in args', () => {
-      const cmd: VerificationCommand = { command: 'npm', args: ['run', 'test', '&&', 'echo', 'hacked'], timeoutMs: 1000 };
+      const cmd: VerificationCommand = {
+        command: 'npm',
+        args: ['run', 'test', '&&', 'echo', 'hacked'],
+        timeoutMs: 1000,
+      };
       expect(() => validateVerificationCommand(baseConfig, cmd)).toThrowError(PolicyViolationError);
     });
 
     it('blocks commands not in allowedCommands if allowedCommands is set', () => {
-      const config = { ...baseConfig, security: { ...baseConfig.security, allowedCommands: ['npm'] } };
+      const config = {
+        ...baseConfig,
+        security: { ...baseConfig.security, allowedCommands: ['npm'] },
+      };
       const cmd1: VerificationCommand = { command: 'npm', args: ['test'], timeoutMs: 1000 };
       const cmd2: VerificationCommand = { command: 'yarn', args: ['test'], timeoutMs: 1000 };
-      
+
       expect(() => validateVerificationCommand(config, cmd1)).not.toThrow();
       expect(() => validateVerificationCommand(config, cmd2)).toThrowError(PolicyViolationError);
     });
@@ -75,8 +102,8 @@ describe('policy validation', () => {
         ...baseConfig,
         claude: {
           ...baseConfig.claude,
-          extraSafeArgs: ['--verbose', '--dangerously-skip-permissions']
-        }
+          extraSafeArgs: ['--verbose', '--dangerously-skip-permissions'],
+        },
       };
       expect(() => validateClaudePermissions(config)).toThrowError(PolicyViolationError);
     });

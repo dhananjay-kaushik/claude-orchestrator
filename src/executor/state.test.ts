@@ -23,11 +23,11 @@ describe('state storage', () => {
     const expectedFile = path.join(expectedDir, 'task-abc.json');
 
     expect(fs.mkdir).toHaveBeenCalledWith(expectedDir, { recursive: true });
-    
+
     // Check what was written
     const writeCall = vi.mocked(fs.writeFile).mock.calls[0];
     expect(writeCall[0]).toBe(expectedFile);
-    
+
     const writtenData = JSON.parse(writeCall[1] as string);
     expect(writtenData.rawJson).toBe(rawJson);
     expect(writtenData.sentinel).toEqual(sentinel);

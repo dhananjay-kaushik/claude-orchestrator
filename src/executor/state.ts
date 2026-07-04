@@ -13,7 +13,7 @@ export async function saveTaskExecutionResult(
   await fs.mkdir(stateDir, { recursive: true });
 
   const stateFile = path.join(stateDir, `${taskId}.json`);
-  
+
   // Try to load existing state if it exists, to not overwrite other fields
   let state: any = {};
   try {

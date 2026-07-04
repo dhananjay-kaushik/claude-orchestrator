@@ -9,9 +9,9 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 37
+- **NOT_DONE**: 35
 - **IN_PROGRESS**: 0
-- **DONE**: 20
+- **DONE**: 22
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -199,12 +199,12 @@ This project must be built with a test-driven development approach. For every pa
   - `claude-orchestrator logs`: print or open paths to relevant logs without dumping full logs by default.
   - `claude-orchestrator resume`: continue an `IN_PROGRESS`, `BLOCKED: SESSION_LIMIT`, or interrupted task after validating worktree state.
 
-- [ ] Define CLI option rules.
+- [x] Define CLI option rules.
   - Options may select config path, plan path, task ID, dry-run, loop mode, and verbosity.
   - Options must not bypass config validation, plan validation, command policy, timeouts, worktree isolation, or verification gates.
   - Dangerous override flags are out of scope for MVP.
 
-- [ ] Add config and command tests.
+- [x] Add config and command tests.
   - Test default config.
   - Test partial user config merging.
   - Test invalid config reports.

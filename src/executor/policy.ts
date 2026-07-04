@@ -11,10 +11,7 @@ export class PolicyViolationError extends Error {
  * Validates a verification command against the security policy.
  * Throws PolicyViolationError if the command is unsafe.
  */
-export function validateVerificationCommand(
-  config: Config,
-  cmd: VerificationCommand,
-): void {
+export function validateVerificationCommand(config: Config, cmd: VerificationCommand): void {
   const DENIED_COMMANDS = ['rm', 'rmdir', 'chmod', 'chown', 'kill', 'pkill', 'killall'];
   const deniedList = new Set([...DENIED_COMMANDS, ...(config.security?.deniedCommands || [])]);
 
@@ -37,7 +34,7 @@ export function validateVerificationCommand(
       'checkout',
       'branch',
       'rm',
-      'amend'
+      'amend',
     ];
     // Check if any argument is a destructive command
     // (A naive check, but sufficient for MVP safety given we don't expect git to be used as a verification command anyway)
@@ -49,18 +46,24 @@ export function validateVerificationCommand(
   // Block shell fragments, inline command chains, redirection, command substitution, and environment interpolation
   const SHELL_CHARACTERS = /[&|<>;$()`\n]/;
   if (SHELL_CHARACTERS.test(cmd.command)) {
-    throw new PolicyViolationError(`Shell fragments and operators are not allowed in command executables.`);
+    throw new PolicyViolationError(
+      `Shell fragments and operators are not allowed in command executables.`,
+    );
   }
   for (const arg of cmd.args) {
     if (SHELL_CHARACTERS.test(arg)) {
-      throw new PolicyViolationError(`Shell fragments and operators are not allowed in command arguments.`);
+      throw new PolicyViolationError(
+        `Shell fragments and operators are not allowed in command arguments.`,
+      );
     }
   }
 
   // Require explicit user confirmation for any command outside the allowlist
   if (config.security?.allowedCommands && config.security.allowedCommands.length > 0) {
     if (!config.security.allowedCommands.includes(baseCommand)) {
-      throw new PolicyViolationError(`Command '${baseCommand}' is not in the allowedCommands list. Explicit user confirmation is required.`);
+      throw new PolicyViolationError(
+        `Command '${baseCommand}' is not in the allowedCommands list. Explicit user confirmation is required.`,
+      );
     }
   }
 }
@@ -71,6 +74,8 @@ export function validateVerificationCommand(
  */
 export function validateClaudePermissions(config: Config): void {
   if (config.claude?.extraSafeArgs?.includes('--dangerously-skip-permissions')) {
-    throw new PolicyViolationError(`'--dangerously-skip-permissions' is not allowed for normal execution.`);
+    throw new PolicyViolationError(
+      `'--dangerously-skip-permissions' is not allowed for normal execution.`,
+    );
   }
 }
