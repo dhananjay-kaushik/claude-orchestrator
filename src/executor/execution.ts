@@ -1,14 +1,16 @@
 import { execa } from 'execa';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { Config, ClaudeJSONResponse } from '../types/index.js';
+import { Config, ClaudeJSONResponse, OrchestratorResult } from '../types/index.js';
 import { buildClaudeCommand } from './command.js';
+import { extractOrchestratorResult } from './parser.js';
 
 export interface ExecutionOutcome {
   success: boolean;
   response?: ClaudeJSONResponse;
   error?: string;
   exitCode?: number | null;
+  sentinel?: OrchestratorResult | null;
 }
 
 export async function executeClaudeHeadless(
@@ -60,10 +62,22 @@ export async function executeClaudeHeadless(
       };
     }
 
+    const sentinel = extractOrchestratorResult(parsed.result);
+    if (!sentinel) {
+      return {
+        success: false,
+        response: parsed,
+        error: 'Missing required ORCHESTRATOR_RESULT sentinel',
+        exitCode: result.exitCode,
+        sentinel: null,
+      };
+    }
+
     return {
       success: true,
       response: parsed,
       exitCode: result.exitCode,
+      sentinel,
     };
   } catch (error: any) {
     if (error.stdout) {

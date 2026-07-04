@@ -21,9 +21,9 @@ describe('executeClaudeHeadless', () => {
     vi.clearAllMocks();
   });
 
-  it('parses valid JSON response successfully', async () => {
+  it('parses valid JSON response successfully with sentinel', async () => {
     const mockResponse: ClaudeJSONResponse = {
-      result: 'task completed',
+      result: 'task completed\nORCHESTRATOR_RESULT: SUCCESS',
       total_cost_usd: 0.1,
       usage: { tokens: 100 },
       session_id: 'session-123',
@@ -39,11 +39,29 @@ describe('executeClaudeHeadless', () => {
     expect(outcome.success).toBe(true);
     expect(outcome.response).toEqual(mockResponse);
     expect(outcome.exitCode).toBe(0);
+    expect(outcome.sentinel).toEqual({ type: 'SUCCESS' });
     expect(fs.writeFile).toHaveBeenCalledWith(
       'logs/task-1-claude-response.json',
       JSON.stringify(mockResponse),
       'utf-8'
     );
+  });
+
+  it('fails when sentinel is missing', async () => {
+    const mockResponse: ClaudeJSONResponse = {
+      result: 'task completed without sentinel',
+    };
+
+    vi.mocked(execa).mockResolvedValueOnce({
+      stdout: JSON.stringify(mockResponse),
+      exitCode: 0,
+    } as any);
+
+    const outcome = await executeClaudeHeadless(mockConfig, 'prompt', 'logs', 'task-1');
+
+    expect(outcome.success).toBe(false);
+    expect(outcome.error).toBe('Missing required ORCHESTRATOR_RESULT sentinel');
+    expect(outcome.sentinel).toBeNull();
   });
 
   it('fails on malformed JSON', async () => {
