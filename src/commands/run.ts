@@ -3,6 +3,7 @@ import { discoverPlan } from '../plans/discovery.js';
 import { parsePlan, ValidationError, determineNextTask, updateTaskStatus } from '../plans/parser.js';
 import { checkClaudeSessionLimits, executeClaudeHeadless } from '../executor/execution.js';
 import { loadPlanState, savePlanState, getTaskState } from '../executor/state.js';
+import { buildExecutionPrompt } from '../prompts/execution.js';
 import fs from 'fs';
 import path from 'path';
 import * as p from '@clack/prompts';
@@ -74,7 +75,9 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
   const logsDir = config.logsDir || '.claude-orchestrator/logs';
   const taskLogDir = path.join(logsDir, parsedPlan.planId, nextTask.id);
 
-  const prompt = `Implement this task: ${nextTask.originalText}\nDo not mark as done. Do not commit.`;
+  const worktreeDir = config.worktreeDir || '.claude-orchestrator/worktrees';
+  const taskWorktree = path.join(process.cwd(), worktreeDir, parsedPlan.planId, nextTask.id);
+  const prompt = buildExecutionPrompt(planPath, nextTask.originalText, nextTask.id, taskWorktree);
   const outcome = await executeClaudeHeadless(config, prompt, taskLogDir, nextTask.id);
 
   const state = await loadPlanState(parsedPlan.planId, config);
