@@ -86,23 +86,36 @@ describe('Worktree Utilities', () => {
     it('should create new branch if branch does not exist', async () => {
       vi.mocked(execa)
         .mockRejectedValueOnce(new Error('fatal: Needed a single revision')) // rev-parse fails
+        .mockResolvedValueOnce({} as any) // worktree prune succeeds
         .mockResolvedValueOnce({} as any); // worktree add succeeds
-      
+
       await createWorktree('/worktree-path', 'my-branch', 'main', '/cwd');
-      
+
       expect(execa).toHaveBeenNthCalledWith(1, 'git', ['rev-parse', '--verify', 'my-branch'], expect.any(Object));
-      expect(execa).toHaveBeenNthCalledWith(2, 'git', ['worktree', 'add', '-b', 'my-branch', '/worktree-path', 'main'], expect.any(Object));
+      expect(execa).toHaveBeenNthCalledWith(2, 'git', ['worktree', 'prune'], expect.any(Object));
+      expect(execa).toHaveBeenNthCalledWith(3, 'git', ['worktree', 'add', '-b', 'my-branch', '/worktree-path', 'main'], expect.any(Object));
     });
 
     it('should checkout existing branch if branch exists', async () => {
       vi.mocked(execa)
         .mockResolvedValueOnce({ exitCode: 0 } as any) // rev-parse succeeds
+        .mockResolvedValueOnce({} as any) // worktree prune succeeds
         .mockResolvedValueOnce({} as any); // worktree add succeeds
-      
+
       await createWorktree('/worktree-path', 'my-branch', 'main', '/cwd');
-      
+
       expect(execa).toHaveBeenNthCalledWith(1, 'git', ['rev-parse', '--verify', 'my-branch'], expect.any(Object));
-      expect(execa).toHaveBeenNthCalledWith(2, 'git', ['worktree', 'add', '/worktree-path', 'my-branch'], expect.any(Object));
+      expect(execa).toHaveBeenNthCalledWith(2, 'git', ['worktree', 'prune'], expect.any(Object));
+      expect(execa).toHaveBeenNthCalledWith(3, 'git', ['worktree', 'add', '/worktree-path', 'my-branch'], expect.any(Object));
+    });
+
+    it('should swallow error when worktree path is already used by a stale registration', async () => {
+      vi.mocked(execa)
+        .mockResolvedValueOnce({ exitCode: 0 } as any) // rev-parse succeeds
+        .mockResolvedValueOnce({} as any) // worktree prune succeeds
+        .mockRejectedValueOnce(new Error("fatal: 'my-branch' is already used by worktree at '/worktree-path'")); // worktree add fails
+
+      await expect(createWorktree('/worktree-path', 'my-branch', 'main', '/cwd')).resolves.not.toThrow();
     });
   });
 

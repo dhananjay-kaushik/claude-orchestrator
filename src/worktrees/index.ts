@@ -62,6 +62,8 @@ export async function createWorktree(
     // Ignore error
   }
 
+  await execa('git', ['worktree', 'prune'], { cwd });
+
   try {
     if (branchExists) {
       await execa('git', ['worktree', 'add', worktreePath, branchName], { cwd });
@@ -69,7 +71,7 @@ export async function createWorktree(
       await execa('git', ['worktree', 'add', '-b', branchName, worktreePath, baseBranch], { cwd });
     }
   } catch (error: any) {
-    if (!error.message.includes('already exists')) {
+    if (!error.message.includes('already exists') && !error.message.includes('already used by worktree')) {
       throw error;
     }
   }
