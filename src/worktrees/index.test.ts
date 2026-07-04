@@ -35,10 +35,10 @@ describe('Worktree Utilities', () => {
   });
 
   describe('getWorktreeBranchName', () => {
-    it('should derive branch name from plan ID and task ID', () => {
-      const result = getWorktreeBranchName('plan123', 'task456');
-      expect(result).toBe('plan123-task456');
-      expect(branchUtils.sanitizeBranchName).toHaveBeenCalledWith('plan123-task456');
+    it('should derive branch name from plan ID', () => {
+      const result = getWorktreeBranchName('plan123');
+      expect(result).toBe('plan123');
+      expect(branchUtils.sanitizeBranchName).toHaveBeenCalledWith('plan123');
     });
   });
 

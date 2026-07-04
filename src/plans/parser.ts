@@ -130,5 +130,36 @@ export function updateTaskStatus(
     `$1$2 [${newStatus === 'NOT_DONE' ? ' ' : newStatus === 'IN_PROGRESS' ? '-' : newStatus === 'DONE' ? 'x' : newStatus === 'FAILED' ? 'f' : 'b'}]$4`,
   );
 
-  return lines.join('\n');
+  return syncStatusTracker(lines.join('\n'));
+}
+
+/**
+ * Recomputes the "## Status Tracker" bullet counts (Total/NOT_DONE/IN_PROGRESS/
+ * DONE/FAILED/BLOCKED) from the actual checkbox markers in the content. Keeps
+ * the tracker from drifting out of sync as the orchestrator flips checkboxes.
+ */
+export function syncStatusTracker(content: string): string {
+  const checkboxRegex = /^\s*[-*]\s+\[(.*?)\]\s+.+$/;
+  const counts = { NOT_DONE: 0, IN_PROGRESS: 0, DONE: 0, FAILED: 0, BLOCKED: 0 };
+
+  for (const line of content.split('\n')) {
+    const match = line.match(checkboxRegex);
+    if (!match) continue;
+    const marker = match[1];
+    if (marker === ' ') counts.NOT_DONE++;
+    else if (marker === '-') counts.IN_PROGRESS++;
+    else if (marker === 'x' || marker === 'X') counts.DONE++;
+    else if (marker === 'f' || marker === 'F') counts.FAILED++;
+    else if (marker === 'b' || marker === 'B') counts.BLOCKED++;
+  }
+
+  const total = counts.NOT_DONE + counts.IN_PROGRESS + counts.DONE + counts.FAILED + counts.BLOCKED;
+
+  return content
+    .replace(/(\*\*Total\*\*:\s*)\d+/, `$1${total}`)
+    .replace(/(\*\*NOT_DONE\*\*:\s*)\d+/, `$1${counts.NOT_DONE}`)
+    .replace(/(\*\*IN_PROGRESS\*\*:\s*)\d+/, `$1${counts.IN_PROGRESS}`)
+    .replace(/(\*\*DONE\*\*:\s*)\d+/, `$1${counts.DONE}`)
+    .replace(/(\*\*FAILED\*\*:\s*)\d+/, `$1${counts.FAILED}`)
+    .replace(/(\*\*BLOCKED\*\*:\s*)\d+/, `$1${counts.BLOCKED}`);
 }

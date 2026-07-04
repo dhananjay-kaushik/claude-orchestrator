@@ -26,10 +26,10 @@ export async function promptForDirtyTaskWorktree(): Promise<WorktreeResumeAction
 }
 
 /**
- * Derives a branch name from plan ID and task ID.
+ * Derives the single branch name shared by all tasks in a plan.
  */
-export function getWorktreeBranchName(planId: string, taskId: string): string {
-  return sanitizeBranchName(`${planId}-${taskId}`);
+export function getWorktreeBranchName(planId: string): string {
+  return sanitizeBranchName(planId);
 }
 
 /**

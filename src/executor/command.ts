@@ -7,6 +7,10 @@ export function buildClaudeCommand(
   const command = config.claude?.binary || 'claude';
   const args = ['-p', prompt, '--output-format', 'json'];
 
+  if (config.models?.execution) {
+    args.push('--model', config.models.execution);
+  }
+
   if (config.claude?.permissionMode) {
     args.push('--permission-mode', config.claude.permissionMode);
   }

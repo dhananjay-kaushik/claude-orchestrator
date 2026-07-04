@@ -3,15 +3,18 @@ import { runPlanCommand } from './plan.js';
 import * as p from '@clack/prompts';
 import { execa } from 'execa';
 import * as fs from 'fs/promises';
+import { loadConfig } from '../config/loader.js';
 
 vi.mock('@clack/prompts', () => ({
   intro: vi.fn(),
   outro: vi.fn(),
   text: vi.fn(),
+  select: vi.fn(),
   isCancel: vi.fn(),
   cancel: vi.fn(),
   log: {
     info: vi.fn(),
+    warn: vi.fn(),
     error: vi.fn(),
   },
 }));
@@ -21,11 +24,7 @@ vi.mock('execa', () => ({
 }));
 
 vi.mock('../config/loader.js', () => ({
-  loadConfig: vi.fn().mockResolvedValue({
-    models: { planning: 'claude-3-7-sonnet-20250219' },
-    planDir: 'docs/plans',
-    claude: { binary: 'claude' },
-  }),
+  loadConfig: vi.fn(),
 }));
 
 vi.mock('fs/promises', async (importOriginal) => {
@@ -33,39 +32,78 @@ vi.mock('fs/promises', async (importOriginal) => {
   return {
     ...mod,
     mkdir: vi.fn(),
+    readdir: vi.fn(),
+    stat: vi.fn(),
   };
 });
 
 describe('runPlanCommand', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     vi.spyOn(process, 'exit').mockImplementation((() => {}) as any);
+    vi.mocked(loadConfig).mockResolvedValue({
+      models: { planning: 'claude-sonnet-5' },
+      planDir: 'docs/plans',
+      claude: { binary: 'claude' },
+    } as any);
+    vi.mocked(fs.mkdir).mockResolvedValue(undefined as any);
+    vi.mocked(fs.readdir).mockResolvedValue([]);
   });
 
-  it('should prompt for model and plan directory', async () => {
-    vi.mocked(p.text).mockResolvedValueOnce('claude-3-7-sonnet-20250219');
-    vi.mocked(p.text).mockResolvedValueOnce('docs/plans');
+  it('should prompt for model, plan directory, and mode, then create a new plan', async () => {
+    vi.mocked(p.select)
+      .mockResolvedValueOnce('claude-sonnet-5') // model
+      .mockResolvedValueOnce('create'); // mode
+    vi.mocked(p.text).mockResolvedValueOnce('docs/plans'); // plan dir
+    vi.mocked(fs.readdir)
+      .mockResolvedValueOnce([] as any) // filesBefore
+      .mockResolvedValueOnce([{ name: 'new-plan.md', isFile: () => true }] as any); // filesAfter
     vi.mocked(execa).mockResolvedValueOnce({} as any);
 
     await runPlanCommand({});
 
-    expect(p.text).toHaveBeenCalledTimes(2);
+    expect(p.text).toHaveBeenCalledTimes(1);
     expect(fs.mkdir).toHaveBeenCalledWith(expect.stringContaining('docs/plans'), {
       recursive: true,
     });
     expect(execa).toHaveBeenCalledWith(
       'claude',
-      expect.arrayContaining(['-p', expect.stringContaining('docs/plans')]),
-      expect.objectContaining({
-        stdio: 'inherit',
-        env: expect.objectContaining({ CLAUDE_MODEL: 'claude-3-7-sonnet-20250219' }),
-      }),
+      expect.arrayContaining(['--model', 'claude-sonnet-5', expect.stringContaining('docs/plans')]),
+      expect.objectContaining({ stdio: 'inherit' }),
     );
+    expect(p.outro).toHaveBeenCalledWith(expect.stringContaining('new-plan.md'));
+  });
+
+  it('should let the user pick and edit an existing plan', async () => {
+    vi.mocked(p.select)
+      .mockResolvedValueOnce('claude-sonnet-5') // model
+      .mockResolvedValueOnce('edit') // mode
+      .mockResolvedValueOnce('/resolved/docs/plans/existing.md'); // discoverPlan's select
+    vi.mocked(p.text).mockResolvedValueOnce('docs/plans'); // plan dir
+    vi.mocked(fs.readdir).mockResolvedValueOnce([
+      { name: 'existing.md', isFile: () => true },
+    ] as any); // discoverPlan listing
+    vi.mocked(fs.stat)
+      .mockResolvedValueOnce({ mtime: new Date('2024-01-01') } as any) // discoverPlan metadata
+      .mockResolvedValueOnce({ mtimeMs: 1 } as any) // before edit
+      .mockResolvedValueOnce({ mtimeMs: 2 } as any); // after edit
+    vi.mocked(execa).mockResolvedValueOnce({} as any);
+
+    await runPlanCommand({});
+
+    expect(execa).toHaveBeenCalledWith(
+      'claude',
+      expect.arrayContaining(['--model', 'claude-sonnet-5', expect.stringContaining('existing.md')]),
+      expect.objectContaining({ stdio: 'inherit' }),
+    );
+    expect(p.outro).toHaveBeenCalledWith(expect.stringContaining('Plan updated'));
   });
 
   it('should handle non-zero Claude exits gracefully', async () => {
-    vi.mocked(p.text).mockResolvedValueOnce('claude-3-7-sonnet-20250219');
-    vi.mocked(p.text).mockResolvedValueOnce('docs/plans');
+    vi.mocked(p.select)
+      .mockResolvedValueOnce('claude-sonnet-5') // model
+      .mockResolvedValueOnce('create'); // mode
+    vi.mocked(p.text).mockResolvedValueOnce('docs/plans'); // plan dir
 
     const execaError: any = new Error('Command failed');
     execaError.exitCode = 1;
@@ -78,8 +116,10 @@ describe('runPlanCommand', () => {
   });
 
   it('should handle SIGINT cancellation gracefully', async () => {
-    vi.mocked(p.text).mockResolvedValueOnce('claude-3-7-sonnet-20250219');
-    vi.mocked(p.text).mockResolvedValueOnce('docs/plans');
+    vi.mocked(p.select)
+      .mockResolvedValueOnce('claude-sonnet-5') // model
+      .mockResolvedValueOnce('create'); // mode
+    vi.mocked(p.text).mockResolvedValueOnce('docs/plans'); // plan dir
 
     const execaError: any = new Error('Command failed');
     execaError.signal = 'SIGINT';

@@ -1,9 +1,4 @@
-export function buildPlanPrompt(planDir: string): string {
-  return `You are Claude Code Orchestrator's interactive planning agent.
-Your goal is to collaborate with the user to create a comprehensive plan for their requested work.
-
-RULES:
-1. You must create a Markdown plan file inside the \`${planDir}\` directory.
+const PLAN_RULES = `1. You must create a Markdown plan file inside the \`{{planDir}}\` directory.
 2. You must use the following 5-state checkbox system for tasks:
    - \`- [ ]\` for NOT_DONE
    - \`- [-]\` for IN_PROGRESS
@@ -22,4 +17,28 @@ RULES:
    - **BLOCKED**: <n>
 7. Do NOT commit any changes yourself. The orchestrator will handle commits.
 8. The generated plan must be machine-parseable by the orchestrator before execution. Keep task lines clean and use standard Markdown list formats (\`-\` or \`*\`).`;
+
+export function buildPlanPrompt(planDir: string): string {
+  return `You are Claude Code Orchestrator's interactive planning agent.
+Your goal is to collaborate with the user to create a comprehensive plan for their requested work.
+
+Start by asking the user what they want to plan. Do not create the plan file until they've described the work.
+
+RULES:
+${PLAN_RULES.replace('{{planDir}}', planDir)}
+
+Once the plan file is written and the user is happy with it, tell them to exit this session (Ctrl+C or /exit) and then run \`claude-orchestrator run\` to start implementation.`;
+}
+
+export function buildEditPlanPrompt(planPath: string, planDir: string): string {
+  return `You are Claude Code Orchestrator's interactive planning agent.
+The user wants to revise an existing plan file at \`${planPath}\`.
+
+Read the file first. Then ask the user what changes they want, and edit the file in place to reflect them.
+While editing, bring the whole file up to the standards below, even parts the user didn't ask you to touch (e.g. fix a broken Status Tracker count or a duplicate task line if you see one).
+
+RULES:
+${PLAN_RULES.replace('{{planDir}}', planDir)}
+
+Once the file is updated and the user is happy with it, tell them to exit this session (Ctrl+C or /exit) and then run \`claude-orchestrator run\` to start implementation.`;
 }

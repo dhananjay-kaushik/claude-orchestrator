@@ -9,11 +9,14 @@ program
   .option('-c, --config <path>', 'path to config file')
   .option('-v, --verbose', 'enable verbose logging');
 
+import { runInitCommand } from './commands/init.js';
+
 program
   .command('init')
   .description('create or update .claude-orchestrator.json interactively')
-  .action(() => {
-    // To be implemented
+  .action(async () => {
+    const parentOpts = program.opts();
+    await runInitCommand({ config: parentOpts.config });
   });
 
 program

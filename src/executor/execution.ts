@@ -32,7 +32,9 @@ export async function checkClaudeSessionLimits(config: Config): Promise<SessionL
     const result = await execa(config.claude.binary, ['-p', 'status', '--output-format', 'json'], {
       shell: false,
       timeout: 5000,
-      stdio: 'pipe',
+      stdin: 'ignore',
+      stdout: 'pipe',
+      stderr: 'pipe',
     });
 
     try {
@@ -100,7 +102,9 @@ export async function executeClaudeHeadless(
     const result = await execa(command, args, {
       shell: false,
       timeout: config.taskTimeoutMs,
-      stdio: 'pipe',
+      stdin: 'ignore',
+      stdout: 'pipe',
+      stderr: 'pipe',
       cancelSignal: signal,
     });
 

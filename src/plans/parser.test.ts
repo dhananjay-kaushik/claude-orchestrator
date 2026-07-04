@@ -137,5 +137,33 @@ describe('Plan Parser', () => {
       expect(updated).toContain('  - [-] Task 1');
       expect(updated).toContain('- [ ] Task 2');
     });
+
+    it('should keep the Status Tracker counts in sync as checkboxes change', () => {
+      const plan = `
+# Plan
+
+## Status Tracker
+- **Total**: 2
+- **NOT_DONE**: 2
+- **IN_PROGRESS**: 0
+- **DONE**: 0
+- **FAILED**: 0
+- **BLOCKED**: 0
+
+- [ ] Task 1
+- [ ] Task 2
+`;
+      const result = parsePlan(plan, 'plan1');
+      const inProgress = updateTaskStatus(plan, result.tasks[0], 'IN_PROGRESS');
+      expect(inProgress).toContain('**Total**: 2');
+      expect(inProgress).toContain('**NOT_DONE**: 1');
+      expect(inProgress).toContain('**IN_PROGRESS**: 1');
+
+      const reparsed = parsePlan(inProgress, 'plan1');
+      const done = updateTaskStatus(inProgress, reparsed.tasks[0], 'DONE');
+      expect(done).toContain('**NOT_DONE**: 1');
+      expect(done).toContain('**IN_PROGRESS**: 0');
+      expect(done).toContain('**DONE**: 1');
+    });
   });
 });

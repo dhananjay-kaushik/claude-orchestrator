@@ -11,7 +11,7 @@ import { runVerification } from '../executor/verification.js';
 import { loadPlanState, savePlanState, getTaskState } from '../executor/state.js';
 import { buildExecutionPrompt } from '../prompts/execution.js';
 import { isGitRepository, initializeGitRepository, resolveDefaultBranch } from '../git/repo.js';
-import { getWorktreeBranchName } from '../worktrees/index.js';
+import { getWorktreeBranchName, createWorktree } from '../worktrees/index.js';
 import {
   stageAllChanges,
   hasStagedChanges,
@@ -23,6 +23,7 @@ import path from 'path';
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
 import { truncateForTerminal } from '../logging/format.js';
+import { MODEL_OPTIONS } from '../models.js';
 
 export interface RunCommandOptions {
   plan?: string;
@@ -57,6 +58,33 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
 
   const config = await loadConfig(options.config);
 
+  const defaultModel = config.models?.execution || 'claude-sonnet-5';
+  const modelChoice = await p.select({
+    message: 'Which model should Claude use for execution?',
+    initialValue: MODEL_OPTIONS.some((o) => o.value === defaultModel) ? defaultModel : 'other',
+    options: [...MODEL_OPTIONS, { value: 'other', label: 'Other (enter manually)' }],
+  });
+
+  if (p.isCancel(modelChoice)) {
+    p.cancel('Execution cancelled.');
+    process.exit(0);
+  }
+
+  let executionModel = modelChoice as string;
+  if (modelChoice === 'other') {
+    const customModel = await p.text({
+      message: 'Enter the model name or alias:',
+      initialValue: defaultModel,
+    });
+
+    if (p.isCancel(customModel)) {
+      p.cancel('Execution cancelled.');
+      process.exit(0);
+    }
+    executionModel = customModel as string;
+  }
+  config.models = { ...config.models, execution: executionModel };
+
   const defaultBranchName = config.baseBranch || 'main';
   const baseBranch = await resolveDefaultBranch(defaultBranchName);
   p.log.info(`Using base branch: ${pc.cyan(baseBranch)}`);
@@ -74,11 +102,25 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
 
   p.log.info(`Selected plan: ${pc.cyan(planPath)}`);
 
+  let keepLooping = true;
+  while (keepLooping) {
+    keepLooping = options.loop === true;
+    await runOneTask(planPath, options, config, baseBranch);
+  }
+}
+
+async function runOneTask(
+  planPath: string,
+  options: RunCommandOptions,
+  config: Awaited<ReturnType<typeof loadConfig>>,
+  baseBranch: string,
+): Promise<void> {
   let parsedPlan;
   let planContent;
   try {
     planContent = fs.readFileSync(planPath, 'utf8');
-    parsedPlan = parsePlan(planContent, planPath);
+    const planId = path.basename(planPath, path.extname(planPath));
+    parsedPlan = parsePlan(planContent, planId);
     p.log.success(pc.green(`Plan validated successfully: ${parsedPlan.tasks.length} tasks found.`));
   } catch (error) {
     if (error instanceof ValidationError) {
@@ -93,7 +135,7 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
   for (const [taskId, taskState] of Object.entries(state.tasks)) {
     retryCounts[taskId] = Math.max(0, taskState.attempts - 1);
   }
-  const nextTask = determineNextTask(parsedPlan.tasks, config.maxRetries || 3, retryCounts);
+  let nextTask = determineNextTask(parsedPlan.tasks, config.maxRetries || 3, retryCounts);
 
   if (!nextTask) {
     let completed = 0, failed = 0, blocked = 0, totalCostUsd = 0, verified = 0, unverified = 0;
@@ -139,14 +181,14 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
   const logsDir = config.logsDir || '.claude-orchestrator/logs';
   const taskLogDir = path.join(logsDir, parsedPlan.planId, nextTask.id);
   const worktreeDir = config.worktreeDir || '.claude-orchestrator/worktrees';
-  const taskWorktree = path.join(process.cwd(), worktreeDir, parsedPlan.planId, nextTask.id);
+  const taskWorktree = path.join(process.cwd(), worktreeDir, parsedPlan.planId);
 
   if (options.dryRun) {
     p.log.info(pc.blue('--- DRY RUN ---'));
     p.log.info(`Plan: ${planPath}`);
     p.log.info(`Task: ${nextTask.originalText.trim()}`);
     
-    const branchName = getWorktreeBranchName(parsedPlan.planId, nextTask.id);
+    const branchName = getWorktreeBranchName(parsedPlan.planId);
     p.log.info(`Branch Operation: Will use branch ${pc.cyan(branchName)} at worktree ${pc.cyan(taskWorktree)} based on ${pc.cyan(baseBranch)}`);
     
     if (config.verificationCommands && config.verificationCommands.length > 0) {
@@ -177,8 +219,13 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
   fs.writeFileSync(planPath, updatedPlanContent, 'utf8');
   p.log.info(pc.blue('Marked task as IN_PROGRESS.'));
 
+  // Re-parse so nextTask.originalText reflects the IN_PROGRESS marker just written;
+  // later updateTaskStatus calls match against updatedPlanContent, not the stale NOT_DONE line.
+  nextTask = parsePlan(updatedPlanContent, parsedPlan.planId).tasks.find((t) => t.id === nextTask!.id)!;
+
   p.log.info('Spawning Claude Code...');
 
+  let needsWorktreeCreation = true;
   if (fs.existsSync(taskWorktree)) {
     const action = await p.select({
       message: `Existing worktree found at ${taskWorktree}. How would you like to proceed?`,
@@ -197,7 +244,14 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
 
     if (action === 'clean') {
       fs.rmSync(taskWorktree, { recursive: true, force: true });
+    } else {
+      needsWorktreeCreation = false;
     }
+  }
+
+  if (needsWorktreeCreation) {
+    const branchName = getWorktreeBranchName(parsedPlan.planId);
+    await createWorktree(taskWorktree, branchName, baseBranch, process.cwd());
   }
 
   const taskState = getTaskState(state, nextTask.id);

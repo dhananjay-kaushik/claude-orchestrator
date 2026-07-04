@@ -7,6 +7,7 @@ import * as loader from '../config/loader.js';
 import * as discovery from '../plans/discovery.js';
 import * as state from '../executor/state.js';
 import * as verification from '../executor/verification.js';
+import * as worktrees from '../worktrees/index.js';
 import * as p from '@clack/prompts';
 
 vi.mock('fs');
@@ -16,6 +17,7 @@ vi.mock('../config/loader.js');
 vi.mock('../plans/discovery.js');
 vi.mock('../executor/state.js');
 vi.mock('../executor/verification.js');
+vi.mock('../worktrees/index.js');
 vi.mock('@clack/prompts', () => ({
   intro: vi.fn(),
   outro: vi.fn(),
@@ -55,6 +57,8 @@ describe('runCommand', () => {
     });
     vi.mocked(state.savePlanState).mockResolvedValue(undefined);
     vi.mocked(verification.runVerification).mockResolvedValue(null);
+    vi.mocked(worktrees.getWorktreeBranchName).mockReturnValue('plan1-2');
+    vi.mocked(worktrees.createWorktree).mockResolvedValue(undefined);
   });
 
   it('stops if no executable tasks are found', async () => {
@@ -192,6 +196,15 @@ describe('runCommand', () => {
       'DONE',
     );
     expect(fs.writeFileSync).toHaveBeenCalledWith('plans/PLAN.md', 'plan content DONE', 'utf8');
+
+    // Regression: taskWorktree must actually be created (git worktree add) before
+    // Claude runs there, not just referenced as a path that's assumed to exist.
+    expect(worktrees.createWorktree).toHaveBeenCalledWith(
+      expect.stringContaining('plan1'),
+      'plan1-2',
+      expect.any(String),
+      expect.any(String),
+    );
   });
 
   it('runs Claude and marks task FAILED on failure', async () => {
@@ -321,6 +334,37 @@ describe('runCommand', () => {
       recursive: true,
       force: true,
     });
+    // Regression: after wiping a dirty worktree, it must be recreated before use.
+    expect(worktrees.createWorktree).toHaveBeenCalled();
+  });
+
+  it('continues in the existing worktree without recreating it', async () => {
+    const mockTask = {
+      id: '2',
+      status: 'NOT_DONE',
+      originalText: '- [ ] task 2',
+      headingContext: '',
+    } as any;
+    vi.mocked(parser.parsePlan).mockReturnValue({ planId: 'plan1', tasks: [mockTask] });
+    vi.mocked(parser.determineNextTask).mockReturnValue(mockTask);
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+
+    // @ts-ignore
+    p.select = vi.fn().mockResolvedValue('continue');
+
+    vi.mocked(execution.checkClaudeSessionLimits).mockResolvedValue({ limitReached: false });
+    vi.mocked(execution.executeClaudeHeadless).mockResolvedValue({
+      success: true,
+      exitCode: 0,
+      sentinel: { type: 'SUCCESS' },
+    });
+    vi.mocked(parser.updateTaskStatus)
+      .mockReturnValueOnce('plan content IN_PROGRESS')
+      .mockReturnValueOnce('plan content DONE');
+
+    await runCommand({});
+
+    expect(worktrees.createWorktree).not.toHaveBeenCalled();
   });
 
   it('halts if existing worktree is found and halt is selected', async () => {
