@@ -19,19 +19,24 @@ program
     await runInitCommand({ config: parentOpts.config });
   });
 
+import { runDoctorCommand } from './commands/doctor.js';
+import { runValidateCommand } from './commands/validate.js';
+
 program
   .command('doctor')
   .description('check environment, config, Git, and Claude binary')
-  .action(() => {
-    // To be implemented
+  .action(async () => {
+    const parentOpts = program.opts();
+    await runDoctorCommand({ config: parentOpts.config });
   });
 
 program
   .command('validate')
   .description('validate config and plan files without executing Claude')
   .option('--plan <path>', 'path to a specific plan file')
-  .action(() => {
-    // To be implemented
+  .action(async (options) => {
+    const parentOpts = program.opts();
+    await runValidateCommand({ ...options, config: parentOpts.config });
   });
 
 import { runPlanCommand } from './commands/plan.js';
@@ -59,13 +64,17 @@ program
     await runCommand({ ...options, config: parentOpts.config });
   });
 
+import { runStatusCommand } from './commands/status.js';
+import { runLogsCommand } from './commands/logs.js';
+
 program
   .command('status')
   .description('show selected plan state, active task, and resume command')
   .option('--plan <path>', 'path to a specific plan file')
   .option('--task <id>', 'stable ID of a specific task')
-  .action(() => {
-    // To be implemented
+  .action(async (options) => {
+    const parentOpts = program.opts();
+    await runStatusCommand({ ...options, config: parentOpts.config });
   });
 
 program
@@ -73,17 +82,9 @@ program
   .description('show paths to relevant logs')
   .option('--plan <path>', 'path to a specific plan file')
   .option('--task <id>', 'stable ID of a specific task')
-  .action(() => {
-    // To be implemented
-  });
-
-program
-  .command('resume')
-  .description('continue an interrupted or paused task')
-  .option('--plan <path>', 'path to a specific plan file')
-  .option('--task <id>', 'stable ID of a specific task')
-  .action(() => {
-    // To be implemented
+  .action(async (options) => {
+    const parentOpts = program.opts();
+    await runLogsCommand({ ...options, config: parentOpts.config });
   });
 
 const isTest = process.env.NODE_ENV === 'test' || process.env.VITEST;

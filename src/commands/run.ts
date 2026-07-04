@@ -122,7 +122,10 @@ async function runOneTask(
     planContent = fs.readFileSync(planPath, 'utf8');
     const planId = path.basename(planPath, path.extname(planPath));
     parsedPlan = parsePlan(planContent, planId);
-    p.log.success(pc.green(`Plan validated successfully: ${parsedPlan.tasks.length} tasks found.`));
+    const notDone = parsedPlan.tasks.filter((t) => t.status !== 'DONE').length;
+    p.log.success(
+      pc.green(`Plan validated successfully: ${notDone}/${parsedPlan.tasks.length} tasks remaining.`),
+    );
   } catch (error) {
     if (error instanceof ValidationError) {
       p.log.error(pc.red(`Plan Validation Failed: ${error.message}`));
@@ -173,6 +176,14 @@ async function runOneTask(
     p.log.info(`Base Branch:     ${baseBranch}`);
     p.log.info(`Logs Directory:  ${config.logsDir}`);
     p.log.info(`State Directory: ${config.stateDir}`);
+
+    if (allDone) {
+      const branchName = getWorktreeBranchName(parsedPlan.planId);
+      p.log.info(`Work Branch:     ${branchName}`);
+      p.log.info(
+        pc.cyan(`To bring this work into another branch: git checkout <your-feature-branch> && git merge ${branchName}`),
+      );
+    }
     process.exit(0);
     return;
   }

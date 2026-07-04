@@ -20,7 +20,6 @@ describe('CLI Help & Entry point', () => {
         'run',
         'status',
         'logs',
-        'resume',
       ]),
     );
     for (const cmd of program.commands) {
