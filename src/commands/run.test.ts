@@ -5,6 +5,7 @@ import * as parser from '../plans/parser.js';
 import * as execution from '../executor/execution.js';
 import * as loader from '../config/loader.js';
 import * as discovery from '../plans/discovery.js';
+import * as state from '../executor/state.js';
 import * as p from '@clack/prompts';
 
 vi.mock('fs');
@@ -12,6 +13,7 @@ vi.mock('../plans/parser.js');
 vi.mock('../executor/execution.js');
 vi.mock('../config/loader.js');
 vi.mock('../plans/discovery.js');
+vi.mock('../executor/state.js');
 vi.mock('@clack/prompts', () => ({
   intro: vi.fn(),
   outro: vi.fn(),
@@ -35,6 +37,18 @@ describe('runCommand', () => {
     
     vi.mocked(discovery.discoverPlan).mockResolvedValue('plans/PLAN.md');
     vi.mocked(fs.readFileSync).mockReturnValue('plan content');
+    
+    vi.mocked(state.loadPlanState).mockResolvedValue({ planId: 'plan1', tasks: {} });
+    vi.mocked(state.getTaskState).mockReturnValue({
+      id: '2',
+      attempts: 0,
+      lastStatus: 'NOT_DONE',
+      logFilePaths: [],
+      claudeExitCodes: [],
+      jsonResponsePaths: [],
+      verificationResults: [],
+    });
+    vi.mocked(state.savePlanState).mockResolvedValue(undefined);
   });
 
   it('stops if no executable tasks are found', async () => {

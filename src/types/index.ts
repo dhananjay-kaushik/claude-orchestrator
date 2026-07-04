@@ -120,7 +120,9 @@ export interface ExecutionSummary {
  * Claude Execution Sentinel Results (Discriminated Union)
  */
 export type OrchestratorResult =
-  { type: 'SUCCESS' } | { type: 'BLOCKED'; reason: string } | { type: 'NEEDS_RETRY_CONTEXT' };
+  | { type: 'SUCCESS'; handoffNotes?: string }
+  | { type: 'BLOCKED'; reason: string; handoffNotes?: string }
+  | { type: 'NEEDS_RETRY_CONTEXT'; handoffNotes?: string };
 
 export interface ClaudeJSONResponse {
   result: string;

@@ -2,6 +2,7 @@ import { loadConfig } from '../config/loader.js';
 import { discoverPlan } from '../plans/discovery.js';
 import { parsePlan, ValidationError, determineNextTask, updateTaskStatus } from '../plans/parser.js';
 import { checkClaudeSessionLimits, executeClaudeHeadless } from '../executor/execution.js';
+import { loadPlanState, savePlanState, getTaskState } from '../executor/state.js';
 import fs from 'fs';
 import path from 'path';
 import * as p from '@clack/prompts';
@@ -76,16 +77,43 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
   const prompt = `Implement this task: ${nextTask.originalText}\nDo not mark as done. Do not commit.`;
   const outcome = await executeClaudeHeadless(config, prompt, taskLogDir, nextTask.id);
 
+  const state = await loadPlanState(parsedPlan.planId, config);
+  const taskState = getTaskState(state, nextTask.id);
+  taskState.attempts += 1;
+  taskState.claudeExitCodes.push(outcome.exitCode ?? null);
+
+  if (outcome.response) {
+    taskState.claudeSessionId = outcome.response.session_id;
+  }
+
+  if (outcome.sentinel && 'handoffNotes' in outcome.sentinel && outcome.sentinel.handoffNotes) {
+    taskState.handoffNotes = outcome.sentinel.handoffNotes;
+  }
+
   if (outcome.success) {
     p.log.success(pc.green('Claude execution succeeded.'));
+
+    p.log.info(pc.blue('Running verification gates... (placeholder)'));
+
+    taskState.lastStatus = 'DONE';
+    await savePlanState(state, config);
+
     const donePlanContent = updateTaskStatus(updatedPlanContent, nextTask, 'DONE');
     fs.writeFileSync(planPath, donePlanContent, 'utf8');
     p.log.success(pc.green('Marked task as DONE.'));
   } else {
     p.log.error(pc.red(`Claude execution failed: ${outcome.error}`));
     if (outcome.sessionLimitReached) {
+       taskState.lastStatus = 'BLOCKED';
+       taskState.limitResetTime = outcome.limitResetTime;
+       taskState.limitMessage = outcome.error;
+       await savePlanState(state, config);
+
        p.log.warn(pc.yellow(`Session limit reached. Resets in ${outcome.limitResetTime || 'unknown'}.`));
     } else {
+       taskState.lastStatus = 'FAILED';
+       await savePlanState(state, config);
+
        const failPlanContent = updateTaskStatus(updatedPlanContent, nextTask, 'FAILED');
        fs.writeFileSync(planPath, failPlanContent, 'utf8');
        p.log.error(pc.red('Marked task as FAILED.'));

@@ -9,9 +9,9 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 22
+- **NOT_DONE**: 20
 - **IN_PROGRESS**: 0
-- **DONE**: 35
+- **DONE**: 37
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -349,7 +349,7 @@ This project must be built with a test-driven development approach. For every pa
   - Do not increment the normal task retry counter for session-limit blocks; quota exhaustion is not an implementation failure.
   - If the app later supports automations, optionally schedule a resume after reset only with explicit user opt-in.
 
-- [-] Implement the execution loop.
+- [x] Implement the execution loop.
   - Load config and selected plan.
   - Run Claude binary/auth preflight before task selection or plan mutation.
   - Parse tasks and identify the next executable task.
@@ -370,7 +370,7 @@ This project must be built with a test-driven development approach. For every pa
   - Refuse to run if plan validation, config validation, or command policy validation fails.
   - When the final task becomes `DONE`, close the run with a completion overview instead of trying to select another task.
 
-- [ ] Keep lifecycle ownership in the orchestrator.
+- [x] Keep lifecycle ownership in the orchestrator.
   - Claude should not mark tasks `DONE`.
   - Claude should not commit changes.
   - Claude should provide handoff notes in its JSON `result`; the orchestrator stores them in state/logs.

@@ -25,14 +25,16 @@ export function extractOrchestratorResult(resultString: string): OrchestratorRes
   }
 
   const type = match[1] as 'SUCCESS' | 'BLOCKED' | 'NEEDS_RETRY_CONTEXT';
+  const handoffNotes = resultString.substring(0, match.index).trim() || undefined;
 
   if (type === 'BLOCKED') {
     const reasonMatch = resultString.match(/BLOCKED_REASON:\s*(.+)$/m);
     return {
       type: 'BLOCKED',
       reason: reasonMatch ? reasonMatch[1].trim() : 'Unknown block reason',
+      handoffNotes,
     };
   }
 
-  return { type };
+  return { type, handoffNotes };
 }

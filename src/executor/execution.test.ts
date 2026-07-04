@@ -39,7 +39,7 @@ describe('executeClaudeHeadless', () => {
     expect(outcome.success).toBe(true);
     expect(outcome.response).toEqual(mockResponse);
     expect(outcome.exitCode).toBe(0);
-    expect(outcome.sentinel).toEqual({ type: 'SUCCESS' });
+    expect(outcome.sentinel).toEqual({ type: 'SUCCESS', handoffNotes: 'task completed' });
     expect(fs.writeFile).toHaveBeenCalledWith(
       'logs/task-1-claude-response.json',
       JSON.stringify(mockResponse),

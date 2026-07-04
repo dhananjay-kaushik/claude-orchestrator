@@ -28,23 +28,23 @@ describe('parseClaudeJSON', () => {
 });
 
 describe('extractOrchestratorResult', () => {
-  it('should extract SUCCESS sentinel', () => {
+  it('should extract SUCCESS sentinel and handoffNotes', () => {
     const result = extractOrchestratorResult(
-      'some output\nORCHESTRATOR_RESULT: SUCCESS\nmore output',
+      'some handoff notes\nORCHESTRATOR_RESULT: SUCCESS\nmore output',
     );
-    expect(result).toEqual({ type: 'SUCCESS' });
+    expect(result).toEqual({ type: 'SUCCESS', handoffNotes: 'some handoff notes' });
   });
 
   it('should extract BLOCKED sentinel with reason', () => {
     const result = extractOrchestratorResult(
       'output\nORCHESTRATOR_RESULT: BLOCKED\nBLOCKED_REASON: missing API key\nend',
     );
-    expect(result).toEqual({ type: 'BLOCKED', reason: 'missing API key' });
+    expect(result).toEqual({ type: 'BLOCKED', reason: 'missing API key', handoffNotes: 'output' });
   });
 
   it('should extract BLOCKED sentinel without reason as unknown', () => {
     const result = extractOrchestratorResult('output\nORCHESTRATOR_RESULT: BLOCKED\nend');
-    expect(result).toEqual({ type: 'BLOCKED', reason: 'Unknown block reason' });
+    expect(result).toEqual({ type: 'BLOCKED', reason: 'Unknown block reason', handoffNotes: 'output' });
   });
 
   it('should extract NEEDS_RETRY_CONTEXT sentinel', () => {
