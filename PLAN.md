@@ -9,9 +9,9 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 56
-- **NOT_DONE**: 52
+- **NOT_DONE**: 51
 - **IN_PROGRESS**: 0
-- **DONE**: 4
+- **DONE**: 5
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -85,7 +85,7 @@ This project must be built with a test-driven development approach. For every pa
   - Do not install `node-notifier` in MVP; notifications are post-MVP.
   - Do not add broad shell helper dependencies that encourage unvalidated command execution.
 
-- [ ] Define the source tree.
+- [x] Define the source tree.
   - `src/cli.ts` for top-level command registration.
   - `src/commands/plan.ts` and `src/commands/run.ts`.
   - `src/config/` for config loading, defaults, and validation.
