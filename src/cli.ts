@@ -1,11 +1,14 @@
+import { createRequire } from 'node:module';
 import { Command } from 'commander';
+
+const { version } = createRequire(import.meta.url)('../package.json') as { version: string };
 
 export const program = new Command();
 
 program
   .name('claude-orchestrator')
   .description('Stateful Workflow Engine on top of Claude Code')
-  .version('0.1.0')
+  .version(version)
   .option('-c, --config <path>', 'path to config file')
   .option('-v, --verbose', 'enable verbose logging');
 

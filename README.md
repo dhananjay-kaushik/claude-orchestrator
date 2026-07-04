@@ -15,7 +15,7 @@ The MVP described below is implemented and tested. The original implementation c
 ## Installation
 
 ```bash
-npm install -g claude-orchestrator
+npm install -g @dhananjay_kaushik/claude-orchestrator
 ```
 
 Requires Node.js >= 18 and the `claude` CLI on your `PATH`.
