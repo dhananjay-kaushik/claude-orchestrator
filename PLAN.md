@@ -9,22 +9,22 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 44
-- **IN_PROGRESS**: 0
-- **DONE**: 13
+- **NOT_DONE**: 42
+- **IN_PROGRESS**: 1
+- **DONE**: 14
 - **FAILED**: 0
 - **BLOCKED**: 0
 
 ## MVP Architecture Decisions
 
-- [ ] Use two distinct Claude invocation modes.
+- [x] Use two distinct Claude invocation modes.
   - Planning mode is interactive and may use normal terminal stdio.
   - Execution mode is headless and must use `claude -p "<prompt>" --output-format json`.
   - Execution code must parse the structured JSON response, not scrape free-form terminal text.
   - Expected execution response fields include `result`, `total_cost_usd`, `usage`, `session_id`, and `is_error`.
   - Treat missing or malformed JSON as an executor failure with a clear log path and no commit.
 
-- [ ] Require a structured task result sentinel inside Claude's JSON `result`.
+- [-] Require a structured task result sentinel inside Claude's JSON `result`.
   - The execution prompt must require a machine-readable sentinel such as `ORCHESTRATOR_RESULT: SUCCESS`, `ORCHESTRATOR_RESULT: BLOCKED`, or `ORCHESTRATOR_RESULT: NEEDS_RETRY_CONTEXT`.
   - `BLOCKED` detection must come from the required sentinel, not vague prose.
   - `DONE` is never taken from Claude output; it is still granted only by orchestrator verification.
