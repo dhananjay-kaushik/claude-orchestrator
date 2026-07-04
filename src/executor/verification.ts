@@ -98,6 +98,7 @@ export async function runVerification(
         exitCode,
         stdoutPath,
         stderrPath,
+        command: `${cmd.command} ${cmd.args.join(' ')}`.trim(),
       };
     }
   }

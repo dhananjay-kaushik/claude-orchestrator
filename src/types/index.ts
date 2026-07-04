@@ -98,6 +98,7 @@ export type VerificationResult =
       exitCode: number | null;
       stdoutPath: string;
       stderrPath: string;
+      command?: string;
     };
 
 /**
@@ -153,6 +154,7 @@ export interface ExecutionTaskState {
   limitMessage?: string;
   lastError?: string;
   lastVerificationError?: string;
+  blockReason?: string;
 }
 
 export interface PlanState {

@@ -22,6 +22,7 @@ import fs from 'fs';
 import path from 'path';
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
+import { truncateForTerminal } from '../logging/format.js';
 
 export interface RunCommandOptions {
   plan?: string;
@@ -95,7 +96,7 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
   const nextTask = determineNextTask(parsedPlan.tasks, config.maxRetries || 3, retryCounts);
 
   if (!nextTask) {
-    let completed = 0, failed = 0, blocked = 0, totalCostUsd = 0;
+    let completed = 0, failed = 0, blocked = 0, totalCostUsd = 0, verified = 0, unverified = 0;
     const commits: string[] = [];
     for (const t of Object.values(state.tasks)) {
       if (t.lastStatus === 'DONE') completed++;
@@ -103,15 +104,32 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
       if (t.lastStatus === 'BLOCKED') blocked++;
       if (t.totalCostUsd) totalCostUsd += t.totalCostUsd;
       if (t.commitHash) commits.push(t.commitHash);
+      const lastVerification = t.verificationResults?.[t.verificationResults.length - 1];
+      if (lastVerification?.success) verified++;
+      else unverified++;
     }
-    p.log.success(pc.green('No executable tasks found. Plan is complete or blocked.'));
+
+    const allDone = parsedPlan.tasks.every((t) => t.status === 'DONE');
+    const hasBlocked = parsedPlan.tasks.some((t) => t.status === 'BLOCKED');
+    if (allDone) {
+      p.log.success(pc.green('All tasks complete. No further orchestration work is needed.'));
+    } else if (hasBlocked) {
+      p.log.warn(pc.yellow('Plan is blocked. Resolve the blocking issue(s) shown above, then rerun.'));
+    } else {
+      p.log.warn(pc.yellow('Remaining tasks have exhausted their retries and need manual intervention.'));
+    }
+
     p.log.info(pc.blue('--- Plan Summary ---'));
     p.log.info(`Completed Tasks: ${completed}`);
     p.log.info(`Failed Tasks:    ${failed}`);
     p.log.info(`Blocked Tasks:   ${blocked}`);
+    p.log.info(`Verification:    ${verified} passed / ${unverified} not passing`);
     p.log.info(`Total Commits:   ${commits.length}`);
     p.log.info(`Total Cost Est.: $${totalCostUsd.toFixed(4)}`);
     p.log.info(`Plan Path:       ${planPath}`);
+    p.log.info(`Base Branch:     ${baseBranch}`);
+    p.log.info(`Logs Directory:  ${config.logsDir}`);
+    p.log.info(`State Directory: ${config.stateDir}`);
     process.exit(0);
     return;
   }
@@ -217,6 +235,7 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
 
   taskState.attempts += 1;
   taskState.claudeExitCodes.push(outcome.exitCode ?? null);
+  p.log.info(`Attempt ${taskState.attempts} of ${config.maxRetries || 3}`);
 
   if (outcome.response) {
     taskState.claudeSessionId = outcome.response.session_id;
@@ -235,7 +254,18 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
     taskState.handoffNotes = outcome.sentinel.handoffNotes;
   }
 
-  if (outcome.success) {
+  if (outcome.success && outcome.sentinel?.type === 'BLOCKED') {
+    taskState.lastStatus = 'BLOCKED';
+    taskState.blockReason = outcome.sentinel.reason;
+    await savePlanState(state, config);
+
+    const blockedPlanContent = updateTaskStatus(updatedPlanContent, nextTask, 'BLOCKED');
+    fs.writeFileSync(planPath, blockedPlanContent, 'utf8');
+
+    p.log.warn(pc.yellow(`Task blocked: ${outcome.sentinel.reason}`));
+    p.log.info(pc.blue(`Detailed logs are available at: ${taskLogDir}`));
+    p.log.info(`Resolve the blocker, then resume with: claude-orchestrator run --plan ${planPath}`);
+  } else if (outcome.success) {
     p.log.success(pc.green('Claude execution succeeded.'));
 
     p.log.info(pc.blue('Running verification gates...'));
@@ -258,7 +288,12 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
         verificationPassed = true;
       }
     } else if (!verificationResult.success) {
-      p.log.error(pc.red(`Verification failed with exit code ${verificationResult.exitCode || 'none'}: ${verificationResult.errorOutput}`));
+      p.log.error(pc.red(`Verification failed with exit code ${verificationResult.exitCode ?? 'none'}.`));
+      if (verificationResult.command) {
+        p.log.error(pc.red(`Failing command: ${verificationResult.command}`));
+      }
+      p.log.error(truncateForTerminal(verificationResult.errorOutput));
+      p.log.info(pc.blue(`Full output: ${verificationResult.stderrPath}`));
       taskState.lastVerificationError = verificationResult.errorOutput;
       verificationPassed = false;
     } else {

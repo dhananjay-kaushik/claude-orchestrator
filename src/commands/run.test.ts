@@ -66,7 +66,7 @@ describe('runCommand', () => {
     await runCommand({});
 
     expect(p.log.success).toHaveBeenCalledWith(
-      expect.stringContaining('No executable tasks found'),
+      expect.stringContaining('All tasks complete'),
     );
     expect(mockExit).toHaveBeenCalledWith(0);
 

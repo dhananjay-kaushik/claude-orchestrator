@@ -537,7 +537,7 @@ This project must be built with a test-driven development approach. For every pa
   - Track known session-limit metadata separately from token/cost estimates.
   - Include reset timing only when it is explicitly available from Claude output/status, not inferred.
 
-- [ ] Implement user-facing summaries.
+- [x] Implement user-facing summaries.
   - Show task result, verification result, retry count, commit hash, and log path.
   - Show Claude session-limit remaining/reset information when available.
   - Keep terminal summaries focused on relevant lines: selected task, result, failing command if any, commit hash, retry count, and next action.
