@@ -10,8 +10,8 @@ This project must be built with a test-driven development approach. For every pa
 
 - **Total**: 57
 - **NOT_DONE**: 9
-- **IN_PROGRESS**: 1
-- **DONE**: 47
+- **IN_PROGRESS**: 0
+- **DONE**: 48
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -486,7 +486,7 @@ This project must be built with a test-driven development approach. For every pa
 
 ## Phase 7: Verification Gates & Dry Run
 
-- [-] Implement verification gates.
+- [x] Implement verification gates.
   - Read ordered commands from config.
   - Run commands from the task worktree by default, not the original project root.
   - Respect structured command `cwd` only when it resolves inside the task worktree.
