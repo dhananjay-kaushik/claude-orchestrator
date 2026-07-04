@@ -9,9 +9,9 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 56
-- **NOT_DONE**: 50
+- **NOT_DONE**: 49
 - **IN_PROGRESS**: 0
-- **DONE**: 6
+- **DONE**: 7
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -102,7 +102,7 @@ This project must be built with a test-driven development approach. For every pa
   - Ensure package `bin` points to the executable.
   - Verify the built CLI can be invoked locally.
 
-- [ ] Add Phase 1 tests before marking scaffold complete.
+- [x] Add Phase 1 tests before marking scaffold complete.
   - Test CLI help can render.
   - Test config defaults can be imported.
   - Test the package entry point resolves after build.
