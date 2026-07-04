@@ -10,8 +10,8 @@ This project must be built with a test-driven development approach. For every pa
 
 - **Total**: 57
 - **NOT_DONE**: 23
-- **IN_PROGRESS**: 1
-- **DONE**: 33
+- **IN_PROGRESS**: 0
+- **DONE**: 34
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -326,7 +326,7 @@ This project must be built with a test-driven development approach. For every pa
   - Treat malformed JSON, missing required fields, and `is_error: true` as executor outcomes, not parser guesses.
   - Never scrape token usage with regex when structured JSON fields are available.
 
-- [-] Define the required Claude result sentinel.
+- [x] Define the required Claude result sentinel.
   - Require Claude to end its `result` text with a machine-readable sentinel.
   - Supported sentinels for MVP:
     - `ORCHESTRATOR_RESULT: SUCCESS`
