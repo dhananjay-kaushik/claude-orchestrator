@@ -31,6 +31,7 @@ describe('executeClaudeHeadless', () => {
 
     vi.mocked(execa).mockResolvedValueOnce({
       stdout: JSON.stringify(mockResponse),
+      stderr: 'Some error with a secret password=secret_token123',
       exitCode: 0,
     } as any);
 
@@ -43,6 +44,11 @@ describe('executeClaudeHeadless', () => {
     expect(fs.writeFile).toHaveBeenCalledWith(
       'logs/task-1-claude-response.json',
       JSON.stringify(mockResponse),
+      'utf-8'
+    );
+    expect(fs.writeFile).toHaveBeenCalledWith(
+      'logs/task-1-claude-stderr.log',
+      'Some error with a secret password=[REDACTED]',
       'utf-8'
     );
   });
@@ -119,7 +125,8 @@ describe('executeClaudeHeadless', () => {
   it('handles execa errors (e.g. timeout)', async () => {
     const error = new Error('Command failed with timeout') as any;
     error.exitCode = 124;
-    error.stdout = '{"result": "partial"}';
+    error.stdout = '{"result": "partial", "password": "supersecret"}';
+    error.stderr = 'Timeout with token=abcxyz123';
 
     vi.mocked(execa).mockRejectedValueOnce(error);
 
@@ -128,10 +135,15 @@ describe('executeClaudeHeadless', () => {
     expect(outcome.success).toBe(false);
     expect(outcome.error).toBe('Command failed with timeout');
     expect(outcome.exitCode).toBe(124);
-    expect(outcome.response).toEqual({ result: 'partial' });
+    expect(outcome.response).toEqual({ result: 'partial', password: 'supersecret' });
     expect(fs.writeFile).toHaveBeenCalledWith(
       'logs/task-1-claude-response.json',
-      '{"result": "partial"}',
+      '{"result": "partial", "password": "[REDACTED]"}',
+      'utf-8'
+    );
+    expect(fs.writeFile).toHaveBeenCalledWith(
+      'logs/task-1-claude-stderr.log',
+      'Timeout with token=[REDACTED]',
       'utf-8'
     );
   });

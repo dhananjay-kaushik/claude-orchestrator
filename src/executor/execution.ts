@@ -4,6 +4,7 @@ import * as path from 'path';
 import { Config, ClaudeJSONResponse, OrchestratorResult } from '../types/index.js';
 import { buildClaudeCommand } from './command.js';
 import { extractOrchestratorResult } from './parser.js';
+import { redactSecrets } from '../logging/redact.js';
 
 export interface ExecutionOutcome {
   success: boolean;
@@ -96,7 +97,12 @@ export async function executeClaudeHeadless(
       stdio: 'pipe',
     });
 
-    await fs.writeFile(rawLogPath, result.stdout, 'utf-8');
+    const stdoutRedacted = redactSecrets(result.stdout);
+    await fs.writeFile(rawLogPath, stdoutRedacted, 'utf-8');
+    if (result.stderr) {
+      const stderrLogPath = path.join(logDir, `${taskId}-claude-stderr.log`);
+      await fs.writeFile(stderrLogPath, redactSecrets(result.stderr), 'utf-8');
+    }
 
     let parsed: ClaudeJSONResponse;
     try {
@@ -160,7 +166,11 @@ export async function executeClaudeHeadless(
     };
   } catch (error: any) {
     if (error.stdout) {
-      await fs.writeFile(rawLogPath, String(error.stdout), 'utf-8');
+      await fs.writeFile(rawLogPath, redactSecrets(String(error.stdout)), 'utf-8');
+    }
+    if (error.stderr) {
+      const stderrLogPath = path.join(logDir, `${taskId}-claude-stderr.log`);
+      await fs.writeFile(stderrLogPath, redactSecrets(String(error.stderr)), 'utf-8');
     }
 
     let parsed: ClaudeJSONResponse | undefined;
