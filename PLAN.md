@@ -9,9 +9,9 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 16
-- **IN_PROGRESS**: 1
-- **DONE**: 40
+- **NOT_DONE**: 15
+- **IN_PROGRESS**: 0
+- **DONE**: 42
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -409,7 +409,7 @@ This project must be built with a test-driven development approach. For every pa
   - Stop immediately when the same failure repeats enough times to hit the cap.
   - Exclude session-limit pauses from retry counts.
 
-- [-] Implement graceful interruption.
+- [x] Implement graceful interruption.
   - On `SIGINT`, stop spawning new work.
   - Forward termination to the Claude child process if it is running.
   - Preserve logs captured so far.
@@ -418,7 +418,7 @@ This project must be built with a test-driven development approach. For every pa
   - Leave the current task as `IN_PROGRESS` or transition it to `FAILED` only if the failure is certain.
   - Print the exact command the user can run to resume.
 
-- [ ] Add executor tests before wiring real Claude execution.
+- [x] Add executor tests before wiring real Claude execution.
   - Test status transitions for success, failure, block, retry, and interrupt.
   - Test headless JSON response parsing.
   - Test malformed JSON handling.
