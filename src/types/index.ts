@@ -83,7 +83,14 @@ export interface PlanParseResult {
  */
 export type VerificationResult =
   | { success: true; durationMs: number; stdoutPath: string; stderrPath: string }
-  | { success: false; durationMs: number; errorOutput: string; exitCode: number | null; stdoutPath: string; stderrPath: string };
+  | {
+      success: false;
+      durationMs: number;
+      errorOutput: string;
+      exitCode: number | null;
+      stdoutPath: string;
+      stderrPath: string;
+    };
 
 /**
  * Execution Summaries
@@ -105,6 +112,4 @@ export interface ExecutionSummary {
  * Claude Execution Sentinel Results (Discriminated Union)
  */
 export type OrchestratorResult =
-  | { type: 'SUCCESS' }
-  | { type: 'BLOCKED'; reason: string }
-  | { type: 'NEEDS_RETRY_CONTEXT' };
+  { type: 'SUCCESS' } | { type: 'BLOCKED'; reason: string } | { type: 'NEEDS_RETRY_CONTEXT' };

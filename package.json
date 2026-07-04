@@ -8,11 +8,11 @@
     "claude-orchestrator": "bin/claude-orchestrator.js"
   },
   "scripts": {
-    "build": "echo 'Build script not implemented'",
-    "typecheck": "echo 'Typecheck script not implemented'",
-    "lint": "echo 'Lint script not implemented'",
-    "format": "echo 'Format script not implemented'",
-    "test": "echo 'Test script not implemented'"
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "test": "vitest run"
   },
   "keywords": [
     "claude",
@@ -28,7 +28,14 @@
     "access": "public"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^26.1.0",
-    "typescript": "^6.0.3"
+    "eslint": "^10.6.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "prettier": "^3.9.4",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.62.1",
+    "vitest": "^4.1.9"
   }
 }

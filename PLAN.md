@@ -6,6 +6,15 @@ The main architectural rule is: **Claude implements one task; the orchestrator o
 
 This project must be built with a test-driven development approach. For every parser, config loader, state transition, Git helper, verification runner, and executor branch, write the failing test first, implement the smallest useful behavior, then refactor with the test suite green. A phase is not complete until its relevant unit or integration tests exist and pass.
 
+## Task Status Tracker
+
+- **Total**: 56
+- **NOT_DONE**: 53
+- **IN_PROGRESS**: 1
+- **DONE**: 2
+- **FAILED**: 0
+- **BLOCKED**: 0
+
 ## MVP Architecture Decisions
 
 - [ ] Use two distinct Claude invocation modes.
@@ -53,13 +62,13 @@ This project must be built with a test-driven development approach. For every pa
   - Add a `.gitignore` covering `node_modules`, build output, logs, generated orchestration state, and local environment files.
   - Initialize Git for this repository before any branch orchestration work begins.
 
-- [-] Add strict TypeScript configuration.
+- [x] Add strict TypeScript configuration.
   - Create `tsconfig.json` with strict mode enabled.
   - Prefer explicit interfaces and discriminated unions for config, CLI args, plan parsing results, task states, verification results, and execution summaries.
   - Avoid `any`; use `unknown` plus validation when external data is parsed.
   - Resolve runtime paths from `process.cwd()` for user project files, never from the installed package directory.
 
-- [ ] Add linting, formatting, and tests before feature work.
+- [-] Add linting, formatting, and tests before feature work.
   - Configure ESLint for TypeScript.
   - Configure Prettier.
   - Add `vitest` for unit tests.
