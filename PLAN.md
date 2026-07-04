@@ -9,8 +9,8 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 45
-- **IN_PROGRESS**: 0
+- **NOT_DONE**: 44
+- **IN_PROGRESS**: 1
 - **DONE**: 12
 - **FAILED**: 0
 - **BLOCKED**: 0
@@ -166,7 +166,7 @@ This project must be built with a test-driven development approach. For every pa
   - Permission args must be assembled from validated config fields.
   - The prompt must be passed as an argument through `execa`, not interpolated through a shell string.
 
-- [ ] Implement config loading.
+- [-] Implement config loading.
   - Resolve config path from `process.cwd()`.
   - Merge user config with safe defaults.
   - Validate config and show friendly errors with actionable fixes.
