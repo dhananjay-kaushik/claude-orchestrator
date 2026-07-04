@@ -3,9 +3,26 @@ export const defaultConfig = {
   planDir: 'workflow_generated_plans',
   baseBranch: 'main',
   branchPrefix: 'claude-',
+  models: {
+    planning: 'claude-3-5-sonnet-20241022'
+  },
+  claude: {
+    binary: 'claude'
+  },
   taskTimeoutMs: 300000,
+  verificationCommands: [],
   maxRetries: 3,
   logsDir: '.claude-orchestrator/logs',
   stateDir: '.claude-orchestrator/state',
-  worktreeDir: '.claude-orchestrator/worktrees'
+  worktreeDir: '.claude-orchestrator/worktrees',
+  commitMessageTemplate: 'chore: complete task from plan',
+  sessionLimits: {
+    showBeforeRun: true,
+    pauseOnLimit: true
+  },
+  security: {
+    deniedCommands: ['rm', 'git reset', 'git clean', 'git push', 'git branch -D'],
+    protectedPaths: ['.env', '.env.local', 'secrets', 'credentials', '.git'],
+    allowNetwork: false
+  }
 };

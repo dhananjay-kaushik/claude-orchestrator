@@ -9,9 +9,9 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 47
+- **NOT_DONE**: 46
 - **IN_PROGRESS**: 0
-- **DONE**: 10
+- **DONE**: 11
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -151,7 +151,7 @@ This project must be built with a test-driven development approach. For every pa
   - `allowFailure` defaults to false and is for advisory commands only; required verification gates must fail the task on non-zero exit.
   - Commands must run with `shell: false`.
 
-- [ ] Define MVP hard limits and defaults.
+- [x] Define MVP hard limits and defaults.
   - `maxRetries` default should be small and must have a hard maximum.
   - `taskTimeoutMs` default must be finite and must have a hard maximum.
   - Verification command timeouts must be finite and bounded.
