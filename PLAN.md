@@ -9,9 +9,9 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 42
+- **NOT_DONE**: 41
 - **IN_PROGRESS**: 0
-- **DONE**: 15
+- **DONE**: 16
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -177,7 +177,7 @@ This project must be built with a test-driven development approach. For every pa
   - Reject verification commands expressed as raw shell strings.
   - Reject user config that tries to override the fixed Claude execution command contract.
 
-- [ ] Implement command and permission policy validation.
+- [x] Implement command and permission policy validation.
   - Validate verification commands before execution.
   - Block destructive Git commands regardless of config.
   - Execute commands with `execa(command, args, { shell: false })`.
