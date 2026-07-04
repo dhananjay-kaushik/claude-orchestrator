@@ -1,6 +1,6 @@
 {
   "name": "claude-orchestrator",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Stateful Workflow Engine on top of Claude Code",
   "type": "module",
   "main": "dist/index.js",
