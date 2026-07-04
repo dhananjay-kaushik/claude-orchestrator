@@ -9,8 +9,8 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 12
-- **IN_PROGRESS**: 0
+- **NOT_DONE**: 11
+- **IN_PROGRESS**: 1
 - **DONE**: 45
 - **FAILED**: 0
 - **BLOCKED**: 0
@@ -466,7 +466,7 @@ This project must be built with a test-driven development approach. For every pa
   - Never delete a dirty worktree automatically.
   - Record worktree path and branch in task state.
 
-- [ ] Create commits only after verification passes.
+- [-] Create commits only after verification passes.
   - Stage all changes with `git add -A` on the dedicated per-task branch/worktree; do not attempt to scope staging by relevance.
   - Include plan file updates and orchestrator state/log references as appropriate.
   - Use a deterministic commit message template.

@@ -10,6 +10,12 @@ import { checkClaudeSessionLimits, executeClaudeHeadless } from '../executor/exe
 import { loadPlanState, savePlanState, getTaskState } from '../executor/state.js';
 import { buildExecutionPrompt } from '../prompts/execution.js';
 import { isGitRepository, initializeGitRepository, resolveDefaultBranch } from '../git/repo.js';
+import {
+  stageAllChanges,
+  hasStagedChanges,
+  createCommit,
+  formatCommitMessage,
+} from '../git/commit.js';
 import fs from 'fs';
 import path from 'path';
 import * as p from '@clack/prompts';
@@ -181,6 +187,25 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
     p.log.success(pc.green('Claude execution succeeded.'));
 
     p.log.info(pc.blue('Running verification gates... (placeholder)'));
+
+    try {
+      await stageAllChanges(taskWorktree);
+      const hasChanges = await hasStagedChanges(taskWorktree);
+      if (hasChanges) {
+        const commitMsg = formatCommitMessage(config.commitMessageTemplate || 'chore: complete task from plan', {
+          planName: parsedPlan.planId,
+          taskId: nextTask.id,
+          taskText: nextTask.originalText.replace(/^[-*]\s*\[.*?\]\s*/, '').trim(),
+        });
+        const commitHash = await createCommit(commitMsg, taskWorktree);
+        taskState.commitHash = commitHash;
+        p.log.success(pc.green(`Created commit ${commitHash}`));
+      } else {
+        p.log.info(pc.blue('No file changes to commit.'));
+      }
+    } catch (err) {
+      p.log.warn(pc.yellow(`Failed to create commit: ${err instanceof Error ? err.message : String(err)}`));
+    }
 
     taskState.lastStatus = 'DONE';
     await savePlanState(state, config);
