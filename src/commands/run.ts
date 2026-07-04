@@ -95,7 +95,23 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
   const nextTask = determineNextTask(parsedPlan.tasks, config.maxRetries || 3, retryCounts);
 
   if (!nextTask) {
+    let completed = 0, failed = 0, blocked = 0, totalCostUsd = 0;
+    const commits: string[] = [];
+    for (const t of Object.values(state.tasks)) {
+      if (t.lastStatus === 'DONE') completed++;
+      if (t.lastStatus === 'FAILED') failed++;
+      if (t.lastStatus === 'BLOCKED') blocked++;
+      if (t.totalCostUsd) totalCostUsd += t.totalCostUsd;
+      if (t.commitHash) commits.push(t.commitHash);
+    }
     p.log.success(pc.green('No executable tasks found. Plan is complete or blocked.'));
+    p.log.info(pc.blue('--- Plan Summary ---'));
+    p.log.info(`Completed Tasks: ${completed}`);
+    p.log.info(`Failed Tasks:    ${failed}`);
+    p.log.info(`Blocked Tasks:   ${blocked}`);
+    p.log.info(`Total Commits:   ${commits.length}`);
+    p.log.info(`Total Cost Est.: $${totalCostUsd.toFixed(4)}`);
+    p.log.info(`Plan Path:       ${planPath}`);
     process.exit(0);
     return;
   }
@@ -204,6 +220,15 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
 
   if (outcome.response) {
     taskState.claudeSessionId = outcome.response.session_id;
+    if (outcome.response.total_cost_usd !== undefined) {
+      taskState.totalCostUsd = (taskState.totalCostUsd || 0) + outcome.response.total_cost_usd;
+    }
+    if (outcome.response.usage) {
+      taskState.usage = taskState.usage || {};
+      for (const [k, v] of Object.entries(outcome.response.usage)) {
+        taskState.usage[k] = (taskState.usage[k] || 0) + (typeof v === 'number' ? v : 0);
+      }
+    }
   }
 
   if (outcome.sentinel && 'handoffNotes' in outcome.sentinel && outcome.sentinel.handoffNotes) {
@@ -266,12 +291,14 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
 
       const donePlanContent = updateTaskStatus(updatedPlanContent, nextTask, 'DONE');
       fs.writeFileSync(planPath, donePlanContent, 'utf8');
+      p.log.info(pc.blue(`Detailed logs are available at: ${taskLogDir}`));
       p.log.success(pc.green('Marked task as DONE.'));
     } else {
       taskState.lastStatus = 'FAILED';
       await savePlanState(state, config);
       const failPlanContent = updateTaskStatus(updatedPlanContent, nextTask, 'FAILED');
       fs.writeFileSync(planPath, failPlanContent, 'utf8');
+      p.log.info(pc.blue(`Detailed logs are available at: ${taskLogDir}`));
       p.log.error(pc.red('Marked task as FAILED due to verification failure.'));
     }
   } else {
@@ -300,6 +327,7 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
 
       const failPlanContent = updateTaskStatus(updatedPlanContent, nextTask, 'FAILED');
       fs.writeFileSync(planPath, failPlanContent, 'utf8');
+      p.log.info(pc.blue(`Detailed logs are available at: ${taskLogDir}`));
       p.log.error(pc.red('Marked task as FAILED.'));
     }
   }

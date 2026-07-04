@@ -109,7 +109,7 @@ export interface ExecutionSummary {
   durationMs: number;
   retries: number;
   totalCostUsd?: number;
-  usage?: unknown;
+  usage?: Record<string, number>;
   verificationResult?: VerificationResult;
   commitHash?: string;
   error?: string;
@@ -127,7 +127,7 @@ export type OrchestratorResult =
 export interface ClaudeJSONResponse {
   result: string;
   total_cost_usd?: number;
-  usage?: unknown;
+  usage?: Record<string, number>;
   session_id?: string;
   is_error?: boolean;
 }
@@ -142,6 +142,8 @@ export interface ExecutionTaskState {
   logFilePaths: string[];
   claudeExitCodes: (number | null)[];
   claudeSessionId?: string;
+  totalCostUsd?: number;
+  usage?: Record<string, number>;
   jsonResponsePaths: string[];
   verificationResults: (VerificationResult | null)[];
   worktreePath?: string;

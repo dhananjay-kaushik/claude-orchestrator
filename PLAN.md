@@ -9,9 +9,9 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 7
+- **NOT_DONE**: 5
 - **IN_PROGRESS**: 1
-- **DONE**: 49
+- **DONE**: 51
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -508,7 +508,7 @@ This project must be built with a test-driven development approach. For every pa
   - Do not edit Markdown.
   - Do not create branches or commits.
 
-- [-] Add tests for verification behavior.
+- [x] Add tests for verification behavior.
   - Test passing commands.
   - Test failing commands.
   - Test no configured commands.
@@ -519,7 +519,7 @@ This project must be built with a test-driven development approach. For every pa
 
 ## Phase 8: Logging, Token/Cost Tracking & Run Reports
 
-- [ ] Implement per-task logging.
+- [x] Implement per-task logging.
   - Store logs under `.claude-orchestrator/logs/<plan-id>/<task-id>/`.
   - Capture Claude stdout and stderr.
   - Capture verification stdout and stderr.
@@ -528,7 +528,7 @@ This project must be built with a test-driven development approach. For every pa
   - Keep terminal output concise by default while preserving full details in log files.
   - Print the detailed log file path at the end of each task and at plan completion.
 
-- [ ] Implement token, usage, cost, and session tracking.
+- [-] Implement token, usage, cost, and session tracking.
   - Read `usage`, `total_cost_usd`, and `session_id` from Claude JSON responses.
   - Store the raw Claude JSON response as evidence.
   - Treat missing structured JSON fields as schema/compatibility issues, not regex parsing problems.
