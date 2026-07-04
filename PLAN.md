@@ -231,7 +231,7 @@ This project must be built with a test-driven development approach. For every pa
   - Ensure the plan directory exists relative to `process.cwd()`.
   - Spawn Claude Code interactively with the plan generation prompt.
 
-- [ ] Use the correct process IO mode for planning.
+- [x] Use the correct process IO mode for planning.
   - `plan` is intentionally interactive, so `stdio: 'inherit'` is acceptable.
   - The command should still catch process exits and restore terminal state cleanly.
   - Non-zero exits should produce a friendly summary and should not leave the CLI in a broken state.
