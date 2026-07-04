@@ -14,6 +14,7 @@ export interface ExecutionOutcome {
   sentinel?: OrchestratorResult | null;
   sessionLimitReached?: boolean;
   limitResetTime?: string;
+  interrupted?: boolean;
 }
 
 export interface SessionLimitInfo {
@@ -83,7 +84,8 @@ export async function executeClaudeHeadless(
   config: Config,
   prompt: string,
   logDir: string,
-  taskId: string
+  taskId: string,
+  signal?: AbortSignal
 ): Promise<ExecutionOutcome> {
   const { command, args } = buildClaudeCommand(config, prompt);
 
@@ -95,6 +97,7 @@ export async function executeClaudeHeadless(
       shell: false,
       timeout: config.taskTimeoutMs,
       stdio: 'pipe',
+      cancelSignal: signal,
     });
 
     const stdoutRedacted = redactSecrets(result.stdout);
@@ -171,6 +174,15 @@ export async function executeClaudeHeadless(
     if (error.stderr) {
       const stderrLogPath = path.join(logDir, `${taskId}-claude-stderr.log`);
       await fs.writeFile(stderrLogPath, redactSecrets(String(error.stderr)), 'utf-8');
+    }
+
+    if (error.isCanceled || error.signal === 'SIGINT') {
+      return {
+        success: false,
+        error: 'Execution interrupted by user',
+        exitCode: error.exitCode ?? null,
+        interrupted: true,
+      };
     }
 
     let parsed: ClaudeJSONResponse | undefined;

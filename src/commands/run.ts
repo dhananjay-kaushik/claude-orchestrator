@@ -81,6 +81,28 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
 
   const worktreeDir = config.worktreeDir || '.claude-orchestrator/worktrees';
   const taskWorktree = path.join(process.cwd(), worktreeDir, parsedPlan.planId, nextTask.id);
+  
+  if (fs.existsSync(taskWorktree)) {
+    const action = await p.select({
+      message: `Existing worktree found at ${taskWorktree}. How would you like to proceed?`,
+      options: [
+        { value: 'continue', label: 'Continue with existing worktree' },
+        { value: 'clean', label: 'Retry from a clean base (delete existing)' },
+        { value: 'halt', label: 'Halt execution' },
+      ],
+    });
+
+    if (p.isCancel(action) || action === 'halt') {
+      p.log.info(pc.yellow('Execution halted.'));
+      process.exit(0);
+      return;
+    }
+    
+    if (action === 'clean') {
+      fs.rmSync(taskWorktree, { recursive: true, force: true });
+    }
+  }
+
   const taskState = getTaskState(state, nextTask.id);
   const retryContext = {
     lastError: taskState.lastError,
@@ -88,7 +110,19 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
   };
 
   const prompt = buildExecutionPrompt(planPath, nextTask.originalText, nextTask.id, taskWorktree, retryContext);
-  const outcome = await executeClaudeHeadless(config, prompt, taskLogDir, nextTask.id);
+  const abortController = new AbortController();
+  const onSigInt = () => {
+    p.log.warn(pc.yellow('\nReceived SIGINT. Cancelling current task...'));
+    abortController.abort();
+  };
+  process.on('SIGINT', onSigInt);
+
+  let outcome;
+  try {
+    outcome = await executeClaudeHeadless(config, prompt, taskLogDir, nextTask.id, abortController.signal);
+  } finally {
+    process.off('SIGINT', onSigInt);
+  }
 
   taskState.attempts += 1;
   taskState.claudeExitCodes.push(outcome.exitCode ?? null);
@@ -114,13 +148,21 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
     p.log.success(pc.green('Marked task as DONE.'));
   } else {
     p.log.error(pc.red(`Claude execution failed: ${outcome.error}`));
-    if (outcome.sessionLimitReached) {
+    if (outcome.interrupted) {
+       // Leave task as IN_PROGRESS
+       taskState.lastStatus = 'IN_PROGRESS';
+       await savePlanState(state, config);
+       p.log.warn(pc.yellow(`Task interrupted. Worktree preserved at ${taskWorktree}.`));
+       p.log.info(`Resume command: claude-orchestrator run --plan ${planPath}`);
+       process.exit(130); // 130 is standard for SIGINT exit
+    } else if (outcome.sessionLimitReached) {
        taskState.lastStatus = 'BLOCKED';
        taskState.limitResetTime = outcome.limitResetTime;
        taskState.limitMessage = outcome.error;
        await savePlanState(state, config);
 
        p.log.warn(pc.yellow(`Session limit reached. Resets in ${outcome.limitResetTime || 'unknown'}.`));
+       p.log.info(`Resume command: claude-orchestrator run --plan ${planPath}`);
     } else {
        taskState.lastStatus = 'FAILED';
        taskState.lastError = outcome.error;

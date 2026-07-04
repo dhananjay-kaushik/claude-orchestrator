@@ -162,6 +162,19 @@ describe('executeClaudeHeadless', () => {
     expect(outcome.limitResetTime).toBe('2 hours');
   });
 
+  it('handles SIGINT interruption', async () => {
+    const error = new Error('Command canceled') as any;
+    error.isCanceled = true;
+
+    vi.mocked(execa).mockRejectedValueOnce(error);
+
+    const outcome = await executeClaudeHeadless(mockConfig, 'prompt', 'logs', 'task-1');
+
+    expect(outcome.success).toBe(false);
+    expect(outcome.interrupted).toBe(true);
+    expect(outcome.error).toBe('Execution interrupted by user');
+  });
+
   it('parses session limit reached from is_error JSON', async () => {
     const mockResponse: ClaudeJSONResponse = {
       result: 'Usage limit exceeded. Resets in 45 minutes',

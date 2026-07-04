@@ -9,9 +9,9 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 18
-- **IN_PROGRESS**: 0
-- **DONE**: 39
+- **NOT_DONE**: 16
+- **IN_PROGRESS**: 1
+- **DONE**: 40
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -397,7 +397,7 @@ This project must be built with a test-driven development approach. For every pa
   - Tell Claude not to edit secret files or credential files.
   - Tell Claude not to run destructive Git operations.
 
-- [-] Implement retry behavior.
+- [x] Implement retry behavior.
   - Increment retry count when Claude fails or verification fails.
   - Include previous verification stderr/stdout excerpts and previous Claude failure summary in the retry prompt.
   - Keep retry context concise and redacted.
@@ -409,7 +409,7 @@ This project must be built with a test-driven development approach. For every pa
   - Stop immediately when the same failure repeats enough times to hit the cap.
   - Exclude session-limit pauses from retry counts.
 
-- [ ] Implement graceful interruption.
+- [-] Implement graceful interruption.
   - On `SIGINT`, stop spawning new work.
   - Forward termination to the Claude child process if it is running.
   - Preserve logs captured so far.
