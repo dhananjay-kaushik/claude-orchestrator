@@ -10,8 +10,8 @@ This project must be built with a test-driven development approach. For every pa
 
 - **Total**: 57
 - **NOT_DONE**: 8
-- **IN_PROGRESS**: 1
-- **DONE**: 48
+- **IN_PROGRESS**: 0
+- **DONE**: 49
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -498,7 +498,7 @@ This project must be built with a test-driven development approach. For every pa
   - Validate commands against security policy before running them.
   - Redact secret-looking output before writing logs.
 
-- [-] Implement `--dry-run`.
+- [x] Implement `--dry-run`.
   - Show selected plan.
   - Show selected task.
   - Show intended branch operation.
