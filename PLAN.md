@@ -9,9 +9,9 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 56
-- **NOT_DONE**: 53
-- **IN_PROGRESS**: 1
-- **DONE**: 2
+- **NOT_DONE**: 52
+- **IN_PROGRESS**: 0
+- **DONE**: 4
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -68,7 +68,7 @@ This project must be built with a test-driven development approach. For every pa
   - Avoid `any`; use `unknown` plus validation when external data is parsed.
   - Resolve runtime paths from `process.cwd()` for user project files, never from the installed package directory.
 
-- [-] Add linting, formatting, and tests before feature work.
+- [x] Add linting, formatting, and tests before feature work.
   - Configure ESLint for TypeScript.
   - Configure Prettier.
   - Add `vitest` for unit tests.
@@ -76,7 +76,7 @@ This project must be built with a test-driven development approach. For every pa
   - Ensure CI-style commands can run non-interactively.
   - Add an initial smoke test so the test harness is proven before feature implementation.
 
-- [ ] Install core runtime dependencies.
+- [x] Install core runtime dependencies.
   - Use `commander` for CLI command routing.
   - Use `@clack/prompts` for interactive prompts.
   - Use `execa` for Claude Code, Git, and verification subprocesses.
