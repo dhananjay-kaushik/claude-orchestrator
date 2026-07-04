@@ -52,6 +52,7 @@ program
   .option('--plan <path>', 'path to a specific plan file')
   .option('--task <id>', 'stable ID of a specific task to run')
   .option('--loop', 'optional explicit loop mode; never implicit')
+  .option('--yes', 'auto-confirm prompts (e.g. commit with no verification configured) for unattended runs')
   .option('--dry-run', 'show intended execution without mutating state')
   .action(async (options) => {
     const parentOpts = program.opts();

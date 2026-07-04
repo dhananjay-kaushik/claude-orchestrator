@@ -30,6 +30,7 @@ export interface RunCommandOptions {
   config?: string;
   task?: string;
   loop?: boolean;
+  yes?: boolean;
   dryRun?: boolean;
 }
 
@@ -310,11 +311,13 @@ async function runOneTask(
     taskState.verificationResults.push(verificationResult);
 
     if (verificationResult === null) {
-      const confirm = await p.confirm({
-        message: 'No verification commands configured. Treat work as complete and commit?',
-        initialValue: true,
-      });
-      
+      const confirm = options.yes
+        ? true
+        : await p.confirm({
+            message: 'No verification commands configured. Treat work as complete and commit?',
+            initialValue: true,
+          });
+
       if (p.isCancel(confirm) || !confirm) {
         verificationPassed = false;
         taskState.lastVerificationError = 'User rejected completion without verification.';
