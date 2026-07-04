@@ -7,6 +7,7 @@ import {
   updateTaskStatus,
 } from '../plans/parser.js';
 import { checkClaudeSessionLimits, executeClaudeHeadless } from '../executor/execution.js';
+import { runVerification } from '../executor/verification.js';
 import { loadPlanState, savePlanState, getTaskState } from '../executor/state.js';
 import { buildExecutionPrompt } from '../prompts/execution.js';
 import { isGitRepository, initializeGitRepository, resolveDefaultBranch } from '../git/repo.js';
@@ -186,33 +187,67 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
   if (outcome.success) {
     p.log.success(pc.green('Claude execution succeeded.'));
 
-    p.log.info(pc.blue('Running verification gates... (placeholder)'));
+    p.log.info(pc.blue('Running verification gates...'));
+    
+    let verificationPassed = false;
+    const verificationResult = await runVerification(config, taskWorktree, taskLogDir);
+    taskState.verificationResults = taskState.verificationResults || [];
+    taskState.verificationResults.push(verificationResult);
 
-    try {
-      await stageAllChanges(taskWorktree);
-      const hasChanges = await hasStagedChanges(taskWorktree);
-      if (hasChanges) {
-        const commitMsg = formatCommitMessage(config.commitMessageTemplate || 'chore: complete task from plan', {
-          planName: parsedPlan.planId,
-          taskId: nextTask.id,
-          taskText: nextTask.originalText.replace(/^[-*]\s*\[.*?\]\s*/, '').trim(),
-        });
-        const commitHash = await createCommit(commitMsg, taskWorktree);
-        taskState.commitHash = commitHash;
-        p.log.success(pc.green(`Created commit ${commitHash}`));
+    if (verificationResult === null) {
+      const confirm = await p.confirm({
+        message: 'No verification commands configured. Treat work as complete and commit?',
+        initialValue: true,
+      });
+      
+      if (p.isCancel(confirm) || !confirm) {
+        verificationPassed = false;
+        taskState.lastVerificationError = 'User rejected completion without verification.';
       } else {
-        p.log.info(pc.blue('No file changes to commit.'));
+        verificationPassed = true;
       }
-    } catch (err) {
-      p.log.warn(pc.yellow(`Failed to create commit: ${err instanceof Error ? err.message : String(err)}`));
+    } else if (!verificationResult.success) {
+      p.log.error(pc.red(`Verification failed with exit code ${verificationResult.exitCode || 'none'}: ${verificationResult.errorOutput}`));
+      taskState.lastVerificationError = verificationResult.errorOutput;
+      verificationPassed = false;
+    } else {
+      p.log.success(pc.green('Verification passed.'));
+      verificationPassed = true;
     }
 
-    taskState.lastStatus = 'DONE';
-    await savePlanState(state, config);
+    if (verificationPassed) {
+      try {
+        await stageAllChanges(taskWorktree);
+        const hasChanges = await hasStagedChanges(taskWorktree);
+        if (hasChanges) {
+          const commitMsg = formatCommitMessage(config.commitMessageTemplate || 'chore: complete task from plan', {
+            planName: parsedPlan.planId,
+            taskId: nextTask.id,
+            taskText: nextTask.originalText.replace(/^[-*]\s*\[.*?\]\s*/, '').trim(),
+          });
+          const commitHash = await createCommit(commitMsg, taskWorktree);
+          taskState.commitHash = commitHash;
+          p.log.success(pc.green(`Created commit ${commitHash}`));
+        } else {
+          p.log.info(pc.blue('No file changes to commit.'));
+        }
+      } catch (err) {
+        p.log.warn(pc.yellow(`Failed to create commit: ${err instanceof Error ? err.message : String(err)}`));
+      }
 
-    const donePlanContent = updateTaskStatus(updatedPlanContent, nextTask, 'DONE');
-    fs.writeFileSync(planPath, donePlanContent, 'utf8');
-    p.log.success(pc.green('Marked task as DONE.'));
+      taskState.lastStatus = 'DONE';
+      await savePlanState(state, config);
+
+      const donePlanContent = updateTaskStatus(updatedPlanContent, nextTask, 'DONE');
+      fs.writeFileSync(planPath, donePlanContent, 'utf8');
+      p.log.success(pc.green('Marked task as DONE.'));
+    } else {
+      taskState.lastStatus = 'FAILED';
+      await savePlanState(state, config);
+      const failPlanContent = updateTaskStatus(updatedPlanContent, nextTask, 'FAILED');
+      fs.writeFileSync(planPath, failPlanContent, 'utf8');
+      p.log.error(pc.red('Marked task as FAILED due to verification failure.'));
+    }
   } else {
     p.log.error(pc.red(`Claude execution failed: ${outcome.error}`));
     if (outcome.interrupted) {
