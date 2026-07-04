@@ -11,6 +11,7 @@ import { runVerification } from '../executor/verification.js';
 import { loadPlanState, savePlanState, getTaskState } from '../executor/state.js';
 import { buildExecutionPrompt } from '../prompts/execution.js';
 import { isGitRepository, initializeGitRepository, resolveDefaultBranch } from '../git/repo.js';
+import { getWorktreeBranchName } from '../worktrees/index.js';
 import {
   stageAllChanges,
   hasStagedChanges,
@@ -101,6 +102,36 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
 
   p.log.info(`Next task: ${nextTask.originalText.trim()}`);
 
+  const logsDir = config.logsDir || '.claude-orchestrator/logs';
+  const taskLogDir = path.join(logsDir, parsedPlan.planId, nextTask.id);
+  const worktreeDir = config.worktreeDir || '.claude-orchestrator/worktrees';
+  const taskWorktree = path.join(process.cwd(), worktreeDir, parsedPlan.planId, nextTask.id);
+
+  if (options.dryRun) {
+    p.log.info(pc.blue('--- DRY RUN ---'));
+    p.log.info(`Plan: ${planPath}`);
+    p.log.info(`Task: ${nextTask.originalText.trim()}`);
+    
+    const branchName = getWorktreeBranchName(parsedPlan.planId, nextTask.id);
+    p.log.info(`Branch Operation: Will use branch ${pc.cyan(branchName)} at worktree ${pc.cyan(taskWorktree)} based on ${pc.cyan(baseBranch)}`);
+    
+    if (config.verificationCommands && config.verificationCommands.length > 0) {
+      p.log.info('Verification Commands:');
+      for (const cmd of config.verificationCommands) {
+        p.log.info(`  - ${cmd.command} ${cmd.args.join(' ')}`);
+      }
+    } else {
+      p.log.info('Verification Commands: None configured.');
+    }
+    
+    p.log.info(`Log Directory: ${taskLogDir}`);
+    p.log.info(`State Directory: ${config.stateDir || '.claude-orchestrator/state'}`);
+    
+    p.outro(pc.green('Dry run complete. No state was mutated.'));
+    process.exit(0);
+    return;
+  }
+
   const limitInfo = await checkClaudeSessionLimits(config);
   if (limitInfo.limitReached) {
     p.log.warn(pc.yellow(`Claude session limit reached: ${limitInfo.message || 'unknown'}`));
@@ -113,11 +144,6 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
   p.log.info(pc.blue('Marked task as IN_PROGRESS.'));
 
   p.log.info('Spawning Claude Code...');
-  const logsDir = config.logsDir || '.claude-orchestrator/logs';
-  const taskLogDir = path.join(logsDir, parsedPlan.planId, nextTask.id);
-
-  const worktreeDir = config.worktreeDir || '.claude-orchestrator/worktrees';
-  const taskWorktree = path.join(process.cwd(), worktreeDir, parsedPlan.planId, nextTask.id);
 
   if (fs.existsSync(taskWorktree)) {
     const action = await p.select({
