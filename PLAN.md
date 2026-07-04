@@ -10,8 +10,8 @@ This project must be built with a test-driven development approach. For every pa
 
 - **Total**: 57
 - **NOT_DONE**: 19
-- **IN_PROGRESS**: 1
-- **DONE**: 37
+- **IN_PROGRESS**: 0
+- **DONE**: 38
 - **FAILED**: 0
 - **BLOCKED**: 0
 
@@ -377,7 +377,7 @@ This project must be built with a test-driven development approach. For every pa
   - The orchestrator should be the only component that decides whether a task is complete.
   - Verification must happen before status becomes `DONE` and before a commit is created.
 
-- [-] Use the correct process IO mode for execution.
+- [x] Use the correct process IO mode for execution.
   - Use headless JSON mode for execution instead of interactive inherited stdio.
   - Use `stdio: 'pipe'` to capture JSON stdout and stderr.
   - Do not stream raw JSON continuously as terminal progress; show concise lifecycle status while saving raw output to files.
