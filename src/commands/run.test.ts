@@ -24,6 +24,8 @@ vi.mock('@clack/prompts', () => ({
     error: vi.fn(),
   },
   isCancel: vi.fn().mockReturnValue(false),
+  confirm: vi.fn().mockResolvedValue(true),
+  select: vi.fn(),
 }));
 
 describe('runCommand', () => {

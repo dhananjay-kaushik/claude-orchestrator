@@ -6,7 +6,11 @@ import { Config, VerificationCommand } from '../types/index.js';
 import { resolve } from 'path';
 
 vi.mock('execa');
-vi.mock('fs/promises');
+vi.mock('fs/promises', () => ({
+  mkdir: vi.fn().mockResolvedValue(undefined),
+  appendFile: vi.fn().mockResolvedValue(undefined),
+  writeFile: vi.fn().mockResolvedValue(undefined),
+}));
 
 describe('verification', () => {
   const mockConfig: Config = {
@@ -54,7 +58,7 @@ describe('verification', () => {
         cwd: '/worktree',
         shell: false
       }));
-      expect(fs.writeFile).toHaveBeenCalledWith(resolve('/logs', 'verification_0_stdout.log'), '');
+      expect(fs.appendFile).toHaveBeenCalledWith(resolve('/logs', 'verification_0_stdout.log'), expect.any(String));
     });
 
     it('returns failure on first failing command', async () => {

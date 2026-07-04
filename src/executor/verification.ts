@@ -47,9 +47,10 @@ export async function runVerification(
     lastStdoutPath = stdoutPath;
     lastStderrPath = stderrPath;
 
-    // Create empty log files
-    await fs.writeFile(stdoutPath, '');
-    await fs.writeFile(stderrPath, '');
+    const timestamp = new Date().toISOString();
+    const header = `\n\n--- Verification Command: ${cmd.command} ${cmd.args.join(' ')} at ${timestamp} ---\n`;
+    await fs.appendFile(stdoutPath, header);
+    await fs.appendFile(stderrPath, header);
 
     const startTime = Date.now();
     let exitCode: number | null = null;
@@ -66,13 +67,11 @@ export async function runVerification(
 
       subprocess.stdout?.on('data', (chunk) => {
         const text = redactSecrets(chunk.toString());
-        process.stdout.write(text);
         fs.appendFile(stdoutPath, text).catch(() => {});
       });
 
       subprocess.stderr?.on('data', (chunk) => {
         const text = redactSecrets(chunk.toString());
-        process.stderr.write(text);
         fs.appendFile(stderrPath, text).catch(() => {});
       });
 
@@ -82,10 +81,13 @@ export async function runVerification(
     } catch (error: any) {
       exitCode = error.exitCode ?? null;
       success = !!cmd.allowFailure;
-      errorOutput = error.shortMessage || error.message || String(error);
+      errorOutput = redactSecrets(error.stderr || error.message || String(error));
     }
-
     const durationMs = Date.now() - startTime;
+    const footer = `\n--- Exit Code: ${exitCode}, Duration: ${durationMs}ms ---\n`;
+    await fs.appendFile(stdoutPath, footer).catch(() => {});
+    await fs.appendFile(stderrPath, footer).catch(() => {});
+
     totalDurationMs += durationMs;
 
     if (!success) {

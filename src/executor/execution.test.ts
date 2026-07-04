@@ -41,14 +41,14 @@ describe('executeClaudeHeadless', () => {
     expect(outcome.response).toEqual(mockResponse);
     expect(outcome.exitCode).toBe(0);
     expect(outcome.sentinel).toEqual({ type: 'SUCCESS', handoffNotes: 'task completed' });
-    expect(fs.writeFile).toHaveBeenCalledWith(
+    expect(fs.appendFile).toHaveBeenCalledWith(
       'logs/task-1-claude-response.json',
-      JSON.stringify(mockResponse),
+      expect.stringContaining(JSON.stringify(mockResponse)),
       'utf-8',
     );
-    expect(fs.writeFile).toHaveBeenCalledWith(
+    expect(fs.appendFile).toHaveBeenCalledWith(
       'logs/task-1-claude-stderr.log',
-      'Some error with a secret password=[REDACTED]',
+      expect.stringContaining('Some error with a secret password=[REDACTED]'),
       'utf-8',
     );
   });
@@ -80,9 +80,9 @@ describe('executeClaudeHeadless', () => {
 
     expect(outcome.success).toBe(false);
     expect(outcome.error).toBe('Malformed JSON response from Claude');
-    expect(fs.writeFile).toHaveBeenCalledWith(
+    expect(fs.appendFile).toHaveBeenCalledWith(
       'logs/task-1-claude-response.json',
-      'not json',
+      expect.stringContaining('not json'),
       'utf-8',
     );
   });
@@ -136,14 +136,14 @@ describe('executeClaudeHeadless', () => {
     expect(outcome.error).toBe('Command failed with timeout');
     expect(outcome.exitCode).toBe(124);
     expect(outcome.response).toEqual({ result: 'partial', password: 'supersecret' });
-    expect(fs.writeFile).toHaveBeenCalledWith(
+    expect(fs.appendFile).toHaveBeenCalledWith(
       'logs/task-1-claude-response.json',
-      '{"result": "partial", "password": "[REDACTED]"}',
+      expect.stringContaining('{"result": "partial", "password": "[REDACTED]"}'),
       'utf-8',
     );
-    expect(fs.writeFile).toHaveBeenCalledWith(
+    expect(fs.appendFile).toHaveBeenCalledWith(
       'logs/task-1-claude-stderr.log',
-      'Timeout with token=[REDACTED]',
+      expect.stringContaining('Timeout with token=[REDACTED]'),
       'utf-8',
     );
   });
