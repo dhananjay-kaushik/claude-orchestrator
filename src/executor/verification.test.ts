@@ -144,5 +144,9 @@ describe('verification', () => {
       expect(redactSecrets('api_key: "123456"')).toBe('api_key: "***"');
       expect(redactSecrets('Authorization: Bearer mytoken123')).toBe('Authorization: Bearer ***');
     });
+
+    it('redacts multiple secrets in one string', () => {
+      expect(redactSecrets('token=abc password="123"')).toBe('token=*** password="***"');
+    });
   });
 });

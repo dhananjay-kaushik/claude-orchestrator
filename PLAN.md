@@ -9,8 +9,8 @@ This project must be built with a test-driven development approach. For every pa
 ## Task Status Tracker
 
 - **Total**: 57
-- **NOT_DONE**: 8
-- **IN_PROGRESS**: 0
+- **NOT_DONE**: 7
+- **IN_PROGRESS**: 1
 - **DONE**: 49
 - **FAILED**: 0
 - **BLOCKED**: 0
@@ -508,7 +508,7 @@ This project must be built with a test-driven development approach. For every pa
   - Do not edit Markdown.
   - Do not create branches or commits.
 
-- [ ] Add tests for verification behavior.
+- [-] Add tests for verification behavior.
   - Test passing commands.
   - Test failing commands.
   - Test no configured commands.
