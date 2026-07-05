@@ -7,6 +7,7 @@ import {
   updateTaskStatus,
 } from '../plans/parser.js';
 import { checkClaudeSessionLimits, executeClaudeHeadless } from '../executor/execution.js';
+import { createLiveLogController } from '../ui/liveLog.js';
 import { runVerification } from '../executor/verification.js';
 import { loadPlanState, savePlanState, getTaskState } from '../executor/state.js';
 import { buildExecutionPrompt } from '../prompts/execution.js';
@@ -247,7 +248,7 @@ async function runOneTask(
   // later updateTaskStatus calls match against updatedPlanContent, not the stale NOT_DONE line.
   nextTask = parsePlan(updatedPlanContent, parsedPlan.planId).tasks.find((t) => t.id === nextTask!.id)!;
 
-  p.log.info('Spawning Claude Code...');
+  p.log.info(`Spawning Claude Code... (press 'l' to view live logs)`);
 
   // The worktree/branch is shared across every task in the plan, so once
   // task 1 creates it, later tasks just keep committing onto it here.
@@ -278,6 +279,9 @@ async function runOneTask(
   };
   process.on('SIGINT', onSigInt);
 
+  const liveLog = createLiveLogController();
+  liveLog.start();
+
   let outcome;
   try {
     outcome = await executeClaudeHeadless(
@@ -286,8 +290,10 @@ async function runOneTask(
       taskLogDir,
       nextTask.id,
       abortController.signal,
+      (line) => liveLog.handleLine(line),
     );
   } finally {
+    liveLog.stop();
     process.off('SIGINT', onSigInt);
   }
 

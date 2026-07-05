@@ -86,20 +86,28 @@ export async function checkClaudeSessionLimits(config: Config): Promise<SessionL
   }
 }
 
+// stream-json emits one JSON object per line; the object of interest (matching
+// the shape of --output-format json) is always the last non-empty line.
+function parseFinalJsonLine(stdout: string): ClaudeJSONResponse {
+  const lines = stdout.split('\n').filter((l) => l.trim().length > 0);
+  return JSON.parse(lines[lines.length - 1] ?? stdout);
+}
+
 export async function executeClaudeHeadless(
   config: Config,
   prompt: string,
   logDir: string,
   taskId: string,
   signal?: AbortSignal,
+  onStreamLine?: (raw: string) => void,
 ): Promise<ExecutionOutcome> {
-  const { command, args } = buildClaudeCommand(config, prompt);
+  const { command, args } = buildClaudeCommand(config, prompt, { stream: !!onStreamLine });
 
   await fs.mkdir(logDir, { recursive: true });
   const rawLogPath = path.join(logDir, `${taskId}-claude-response.json`);
 
   try {
-    const result = await execa(command, args, {
+    const subprocess = execa(command, args, {
       shell: false,
       timeout: config.taskTimeoutMs,
       stdin: 'ignore',
@@ -107,6 +115,20 @@ export async function executeClaudeHeadless(
       stderr: 'pipe',
       cancelSignal: signal,
     });
+
+    if (onStreamLine && subprocess.stdout) {
+      let pending = '';
+      subprocess.stdout.on('data', (chunk: Buffer) => {
+        pending += chunk.toString('utf-8');
+        const lines = pending.split('\n');
+        pending = lines.pop() ?? '';
+        for (const line of lines) {
+          if (line.trim()) onStreamLine(line);
+        }
+      });
+    }
+
+    const result = await subprocess;
 
     const timestamp = new Date().toISOString();
     const header = `\n\n--- Claude Execution at ${timestamp} ---\n`;
@@ -119,7 +141,7 @@ export async function executeClaudeHeadless(
 
     let parsed: ClaudeJSONResponse;
     try {
-      parsed = JSON.parse(result.stdout);
+      parsed = parseFinalJsonLine(result.stdout);
     } catch (e) {
       return {
         success: false,
@@ -200,7 +222,7 @@ export async function executeClaudeHeadless(
     let parsed: ClaudeJSONResponse | undefined;
     if (error.stdout) {
       try {
-        parsed = JSON.parse(String(error.stdout));
+        parsed = parseFinalJsonLine(String(error.stdout));
       } catch (e) {
         // ignore
       }

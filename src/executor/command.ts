@@ -3,9 +3,12 @@ import { Config } from '../types/index.js';
 export function buildClaudeCommand(
   config: Config,
   prompt: string,
+  options?: { stream?: boolean },
 ): { command: string; args: string[] } {
   const command = config.claude?.binary || 'claude';
-  const args = ['-p', prompt, '--output-format', 'json'];
+  const args = options?.stream
+    ? ['-p', prompt, '--output-format', 'stream-json', '--verbose']
+    : ['-p', prompt, '--output-format', 'json'];
 
   if (config.models?.execution) {
     args.push('--model', config.models.execution);
