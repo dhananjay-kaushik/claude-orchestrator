@@ -13,6 +13,11 @@ Task: ${taskText}
 
 Plan File: ${planPath}
 Worktree: ${worktreePath}
+
+The task line above may have additional context, sub-details, or acceptance
+criteria in the Plan File (e.g. nested bullets under this task, or the section
+heading it belongs to). Before implementing, open the Plan File and read the
+context around this exact task line. Use it, but still implement ONLY this task.
 `;
 
   if (retryContext && (retryContext.lastError || retryContext.lastVerificationError)) {
