@@ -248,7 +248,7 @@ async function runOneTask(
   // later updateTaskStatus calls match against updatedPlanContent, not the stale NOT_DONE line.
   nextTask = parsePlan(updatedPlanContent, parsedPlan.planId).tasks.find((t) => t.id === nextTask!.id)!;
 
-  p.log.info(`Spawning Claude Code... (press 'l' to view live logs)`);
+  p.log.info('Spawning Claude Code...');
 
   // The worktree/branch is shared across every task in the plan, so once
   // task 1 creates it, later tasks just keep committing onto it here.

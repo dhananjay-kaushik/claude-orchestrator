@@ -54,8 +54,7 @@ export function createLiveLogController(): LiveLogController {
   }
 
   function openPane() {
-    process.stdout.write(pc.dim(`┌─ live log (press ${TOGGLE_KEY} to hide) ──\n`));
-    linesSinceOpen = 1;
+    linesSinceOpen = 0;
   }
 
   function closePane() {
@@ -81,6 +80,7 @@ export function createLiveLogController(): LiveLogController {
 
     start() {
       if (!process.stdin.isTTY) return;
+      process.stdout.write(pc.dim(`── press ${TOGGLE_KEY} to toggle live logs ──\n`));
       readline.emitKeypressEvents(process.stdin);
       process.stdin.setRawMode(true);
       keypressHandler = (str, key) => {
