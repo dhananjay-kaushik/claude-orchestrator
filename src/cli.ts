@@ -69,6 +69,7 @@ program
 
 import { runStatusCommand } from './commands/status.js';
 import { runLogsCommand } from './commands/logs.js';
+import { runResetLastTaskCommand, runResetPlanCommand } from './commands/reset.js';
 
 program
   .command('status')
@@ -88,6 +89,26 @@ program
   .action(async (options) => {
     const parentOpts = program.opts();
     await runLogsCommand({ ...options, config: parentOpts.config });
+  });
+
+const resetCmd = program.command('reset').description('reset plan progress after a failed run');
+
+resetCmd
+  .command('last-task')
+  .description('reset the blocking failed task (out of retries) back to NOT_DONE')
+  .option('--plan <path>', 'path to a specific plan file')
+  .action(async (options) => {
+    const parentOpts = program.opts();
+    await runResetLastTaskCommand({ ...options, config: parentOpts.config });
+  });
+
+resetCmd
+  .command('plan')
+  .description('reset every task in a plan back to NOT_DONE and clear its execution state')
+  .option('--plan <path>', 'path to a specific plan file')
+  .action(async (options) => {
+    const parentOpts = program.opts();
+    await runResetPlanCommand({ ...options, config: parentOpts.config });
   });
 
 const isTest = process.env.NODE_ENV === 'test' || process.env.VITEST;
