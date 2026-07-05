@@ -8,6 +8,10 @@ export const defaultConfig = {
   },
   claude: {
     binary: 'claude',
+    // ponytail: acceptEdits lets headless tasks actually write files; without it
+    // Claude's default permission mode blocks Write/Edit waiting for interactive
+    // approval that never comes, and the task gets marked BLOCKED.
+    permissionMode: 'acceptEdits',
   },
   taskTimeoutMs: 300000,
   verificationCommands: [],

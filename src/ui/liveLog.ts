@@ -1,8 +1,8 @@
 import * as readline from 'readline';
 import pc from 'picocolors';
 
-const MAX_LINES = 15;
 const TOGGLE_KEY = 'l';
+const CATCHUP_LINES = 5;
 
 export interface LiveLogController {
   /** Feed one raw NDJSON line from the Claude stream. */
@@ -24,52 +24,48 @@ function formatEvent(raw: string): string | null {
   if (evt.type === 'assistant') {
     for (const block of evt.message?.content ?? []) {
       if (block.type === 'text' && block.text?.trim()) {
-        return `assistant: ${block.text.trim().replace(/\s+/g, ' ').slice(0, 200)}`;
+        const text = block.text.trim().replace(/\s+/g, ' ').slice(0, 200);
+        return `${pc.cyan('assistant')} ${text}`;
       }
       if (block.type === 'tool_use') {
-        return `tool: ${block.name}`;
+        return `${pc.yellow('tool')}      ${pc.bold(block.name)}`;
       }
     }
     return null;
   }
   if (evt.type === 'result') {
-    return evt.is_error ? pc.red('done: error') : pc.green('done: success');
+    return evt.is_error ? pc.red('✗ done (error)') : pc.green('✓ done');
   }
   return null;
 }
 
+// Appends lines to stdout rather than redrawing a fixed pane in place: clack's
+// own log lines (spinners, ●/◆ markers) write to stdout independently, and
+// cursor-based erase/redraw desyncs against writes it doesn't control.
 export function createLiveLogController(): LiveLogController {
   const buffer: string[] = [];
   let open = false;
-  let rendered = 0;
   let keypressHandler: ((str: string, key: readline.Key) => void) | null = null;
 
-  function clearPane() {
-    if (rendered > 0) {
-      readline.moveCursor(process.stdout, 0, -rendered);
-      readline.cursorTo(process.stdout, 0);
-      readline.clearScreenDown(process.stdout);
-    }
-    rendered = 0;
+  function printLine(line: string) {
+    process.stdout.write(`${pc.dim('│')} ${line}\n`);
   }
 
-  function redraw() {
-    clearPane();
-    const lines = buffer.slice(-MAX_LINES);
-    const out = [
-      pc.dim(`── live log (press ${TOGGLE_KEY} to hide) ──`),
-      ...(lines.length ? lines : [pc.dim('(waiting for output...)')]),
-      pc.dim('──'),
-    ];
-    process.stdout.write(out.join('\n') + '\n');
-    rendered = out.length;
+  function openPane() {
+    process.stdout.write(pc.dim(`┌─ live log (press ${TOGGLE_KEY} to hide) ──\n`));
+    for (const line of buffer.slice(-CATCHUP_LINES)) printLine(line);
+  }
+
+  function closePane() {
+    process.stdout.write(pc.dim(`└─ live log hidden (press ${TOGGLE_KEY} to view) ──\n`));
   }
 
   return {
     handleLine(raw: string) {
       const line = formatEvent(raw);
-      if (line) buffer.push(line);
-      if (open) redraw();
+      if (!line) return;
+      buffer.push(line);
+      if (open) printLine(line);
     },
 
     start() {
@@ -83,8 +79,8 @@ export function createLiveLogController(): LiveLogController {
         }
         if (str === TOGGLE_KEY) {
           open = !open;
-          if (open) redraw();
-          else clearPane();
+          if (open) openPane();
+          else closePane();
         }
       };
       process.stdin.on('keypress', keypressHandler);
@@ -93,7 +89,6 @@ export function createLiveLogController(): LiveLogController {
 
     stop() {
       if (!process.stdin.isTTY) return;
-      clearPane();
       if (keypressHandler) process.stdin.off('keypress', keypressHandler);
       process.stdin.setRawMode(false);
       process.stdin.pause();
