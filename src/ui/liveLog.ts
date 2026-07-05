@@ -2,7 +2,6 @@ import * as readline from 'readline';
 import pc from 'picocolors';
 
 const TOGGLE_KEY = 'l';
-const CATCHUP_LINES = 5;
 
 export interface LiveLogController {
   /** Feed one raw NDJSON line from the Claude stream. */
@@ -39,33 +38,45 @@ function formatEvent(raw: string): string | null {
   return null;
 }
 
-// Appends lines to stdout rather than redrawing a fixed pane in place: clack's
-// own log lines (spinners, ●/◆ markers) write to stdout independently, and
-// cursor-based erase/redraw desyncs against writes it doesn't control.
+// Appends lines to stdout while open rather than redrawing every event: clack's
+// own log lines (spinners, ●/◆ markers) write to stdout independently, and a
+// continuously-redrawn pane desyncs against writes it doesn't control.
+// On close, the whole block is erased in one shot instead — safe because
+// nothing else writes to stdout between open() and close() for a given toggle.
 export function createLiveLogController(): LiveLogController {
-  const buffer: string[] = [];
   let open = false;
+  let linesSinceOpen = 0;
   let keypressHandler: ((str: string, key: readline.Key) => void) | null = null;
 
   function printLine(line: string) {
     process.stdout.write(`${pc.dim('│')} ${line}\n`);
+    linesSinceOpen++;
   }
 
   function openPane() {
     process.stdout.write(pc.dim(`┌─ live log (press ${TOGGLE_KEY} to hide) ──\n`));
-    for (const line of buffer.slice(-CATCHUP_LINES)) printLine(line);
+    linesSinceOpen = 1;
   }
 
   function closePane() {
-    process.stdout.write(pc.dim(`└─ live log hidden (press ${TOGGLE_KEY} to view) ──\n`));
+    // ponytail: can only erase what's still on-screen; anything beyond the
+    // terminal's visible height already scrolled into unreachable scrollback.
+    const rows = process.stdout.rows || 24;
+    const eraseCount = Math.min(linesSinceOpen, rows - 1);
+    if (eraseCount > 0) {
+      readline.moveCursor(process.stdout, 0, -eraseCount);
+      readline.cursorTo(process.stdout, 0);
+      readline.clearScreenDown(process.stdout);
+    }
+    linesSinceOpen = 0;
   }
 
   return {
     handleLine(raw: string) {
+      if (!open) return;
       const line = formatEvent(raw);
       if (!line) return;
-      buffer.push(line);
-      if (open) printLine(line);
+      printLine(line);
     },
 
     start() {
