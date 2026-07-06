@@ -101,7 +101,7 @@ export async function executeClaudeHeadless(
   signal?: AbortSignal,
   onStreamLine?: (raw: string) => void,
 ): Promise<ExecutionOutcome> {
-  const { command, args } = buildClaudeCommand(config, prompt, { stream: !!onStreamLine });
+  const { command, args, stdin } = buildClaudeCommand(config, prompt, { stream: !!onStreamLine });
 
   await fs.mkdir(logDir, { recursive: true });
   const rawLogPath = path.join(logDir, `${taskId}-claude-response.json`);
@@ -110,7 +110,7 @@ export async function executeClaudeHeadless(
     const subprocess = execa(command, args, {
       shell: false,
       timeout: config.taskTimeoutMs,
-      stdin: 'ignore',
+      input: stdin,
       stdout: 'pipe',
       stderr: 'pipe',
       cancelSignal: signal,

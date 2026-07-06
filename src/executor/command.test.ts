@@ -25,10 +25,11 @@ describe('buildClaudeCommand', () => {
 
   it('assembles the basic headless command', () => {
     const prompt = 'Test task prompt';
-    const { command, args } = buildClaudeCommand(baseConfig, prompt);
+    const { command, args, stdin } = buildClaudeCommand(baseConfig, prompt);
 
     expect(command).toBe('claude');
-    expect(args).toEqual(['-p', 'Test task prompt', '--output-format', 'json']);
+    expect(args).toEqual(['-p', '--output-format', 'json']);
+    expect(stdin).toBe('Test task prompt');
   });
 
   it('applies permission mode when configured', () => {
