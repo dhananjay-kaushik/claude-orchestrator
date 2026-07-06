@@ -12,7 +12,13 @@ import { runVerification } from '../executor/verification.js';
 import { loadPlanState, savePlanState, getTaskState } from '../executor/state.js';
 import { buildExecutionPrompt } from '../prompts/execution.js';
 import { isGitRepository, initializeGitRepository, resolveDefaultBranch } from '../git/repo.js';
-import { getWorktreeBranchName, createWorktree, mergeWorktreeBranch, removeWorktree } from '../worktrees/index.js';
+import {
+  getWorktreeBranchName,
+  createWorktree,
+  provisionWorktreeDependencies,
+  mergeWorktreeBranch,
+  removeWorktree,
+} from '../worktrees/index.js';
 import {
   stageAllChanges,
   hasStagedChanges,
@@ -257,6 +263,7 @@ async function runOneTask(
   } else {
     const branchName = getWorktreeBranchName(parsedPlan.planId);
     await createWorktree(taskWorktree, branchName, baseBranch, process.cwd());
+    await provisionWorktreeDependencies(taskWorktree, process.cwd());
   }
 
   const taskState = getTaskState(state, nextTask.id);
@@ -368,6 +375,7 @@ async function runOneTask(
     }
 
     if (verificationPassed) {
+      let commitFailed = false;
       try {
         await stageAllChanges(taskWorktree);
         const hasChanges = await hasStagedChanges(taskWorktree);
@@ -384,16 +392,27 @@ async function runOneTask(
           p.log.info(pc.blue('No file changes to commit.'));
         }
       } catch (err) {
-        p.log.warn(pc.yellow(`Failed to create commit: ${err instanceof Error ? err.message : String(err)}`));
+        commitFailed = true;
+        p.log.error(pc.red(`Failed to create commit: ${err instanceof Error ? err.message : String(err)}`));
+        taskState.lastVerificationError = `Failed to create commit: ${err instanceof Error ? err.message : String(err)}`;
       }
 
-      taskState.lastStatus = 'DONE';
-      await savePlanState(state, config);
+      if (commitFailed) {
+        taskState.lastStatus = 'FAILED';
+        await savePlanState(state, config);
+        const failPlanContent = updateTaskStatus(updatedPlanContent, nextTask, 'FAILED');
+        fs.writeFileSync(planPath, failPlanContent, 'utf8');
+        p.log.info(pc.blue(`Detailed logs are available at: ${taskLogDir}`));
+        p.log.error(pc.red('Marked task as FAILED due to commit failure.'));
+      } else {
+        taskState.lastStatus = 'DONE';
+        await savePlanState(state, config);
 
-      const donePlanContent = updateTaskStatus(updatedPlanContent, nextTask, 'DONE');
-      fs.writeFileSync(planPath, donePlanContent, 'utf8');
-      p.log.info(pc.blue(`Detailed logs are available at: ${taskLogDir}`));
-      p.log.success(pc.green('Marked task as DONE.'));
+        const donePlanContent = updateTaskStatus(updatedPlanContent, nextTask, 'DONE');
+        fs.writeFileSync(planPath, donePlanContent, 'utf8');
+        p.log.info(pc.blue(`Detailed logs are available at: ${taskLogDir}`));
+        p.log.success(pc.green('Marked task as DONE.'));
+      }
     } else {
       taskState.lastStatus = 'FAILED';
       await savePlanState(state, config);

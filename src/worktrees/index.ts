@@ -2,6 +2,29 @@ import { execa } from 'execa';
 import { isCancel, select } from '@clack/prompts';
 import { sanitizeBranchName, hasUncommittedChanges } from '../git/branch.js';
 import * as fs from 'fs/promises';
+import * as path from 'path';
+
+const DEP_DIR_NAMES = new Set(['node_modules', 'venv', '.venv']);
+const SKIP_DIR_NAMES = new Set(['.git', '.claude-orchestrator', '.next', '.turbo', 'dist', 'build']);
+
+async function findDependencyDirs(dir: string, results: string[] = []): Promise<string[]> {
+  let entries;
+  try {
+    entries = await fs.readdir(dir, { withFileTypes: true });
+  } catch {
+    return results;
+  }
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    if (DEP_DIR_NAMES.has(entry.name)) {
+      results.push(path.join(dir, entry.name));
+      continue;
+    }
+    if (SKIP_DIR_NAMES.has(entry.name)) continue;
+    await findDependencyDirs(path.join(dir, entry.name), results);
+  }
+  return results;
+}
 
 export type WorktreeResumeAction = 'continue' | 'retry' | 'halt';
 
@@ -74,6 +97,27 @@ export async function createWorktree(
     if (!error.message.includes('already exists') && !error.message.includes('already used by worktree')) {
       throw error;
     }
+  }
+}
+
+/**
+ * Symlinks node_modules and Python venv directories from the main checkout into a
+ * freshly created worktree, since these are gitignored and won't exist there otherwise.
+ * Skips any path that already exists in the worktree.
+ */
+export async function provisionWorktreeDependencies(worktreePath: string, cwd = process.cwd()): Promise<void> {
+  const depDirs = await findDependencyDirs(cwd);
+  for (const depDir of depDirs) {
+    const relPath = path.relative(cwd, depDir);
+    const target = path.join(worktreePath, relPath);
+    try {
+      await fs.access(target);
+      continue;
+    } catch {
+      // doesn't exist yet, create the symlink below
+    }
+    await fs.mkdir(path.dirname(target), { recursive: true });
+    await fs.symlink(depDir, target, 'dir');
   }
 }
 
