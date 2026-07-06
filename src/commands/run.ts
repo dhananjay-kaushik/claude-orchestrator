@@ -272,12 +272,19 @@ async function runOneTask(
     lastVerificationError: taskState.lastVerificationError,
   };
 
+  const commitMsg = formatCommitMessage(config.commitMessageTemplate || 'chore: complete task from plan', {
+    planName: parsedPlan.planId,
+    taskId: nextTask.id,
+    taskText: nextTask.originalText.replace(/^[-*]\s*\[.*?\]\s*/, '').trim(),
+  });
+
   const prompt = buildExecutionPrompt(
     planPath,
     nextTask.originalText,
     nextTask.id,
     taskWorktree,
     retryContext,
+    commitMsg,
   );
   const abortController = new AbortController();
   const onSigInt = () => {
@@ -380,11 +387,8 @@ async function runOneTask(
         await stageAllChanges(taskWorktree);
         const hasChanges = await hasStagedChanges(taskWorktree);
         if (hasChanges) {
-          const commitMsg = formatCommitMessage(config.commitMessageTemplate || 'chore: complete task from plan', {
-            planName: parsedPlan.planId,
-            taskId: nextTask.id,
-            taskText: nextTask.originalText.replace(/^[-*]\s*\[.*?\]\s*/, '').trim(),
-          });
+          // ponytail: fallback path — Claude is instructed to commit its own work, so this
+          // only fires if it skipped that step. Reuses the same message it was given.
           const commitHash = await createCommit(commitMsg, taskWorktree);
           taskState.commitHash = commitHash;
           p.log.success(pc.green(`Created commit ${commitHash}`));
