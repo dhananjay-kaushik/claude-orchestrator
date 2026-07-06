@@ -1,6 +1,6 @@
 {
   "name": "@dhananjay_kaushik/claude-orchestrator",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Stateful Workflow Engine on top of Claude Code",
   "type": "module",
   "main": "dist/index.js",
