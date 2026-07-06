@@ -39,11 +39,15 @@ context around this exact task line. Use it, but still implement ONLY this task.
   prompt += `
 RULES:
 1. Do not continue to later tasks.
-2. Once your changes are complete and verified, stage and commit them yourself:
+2. Always attempt to stage and commit yourself before finishing, even if you believe there is nothing to
+   change — this is what actually runs the repo's pre-commit hooks (lint, format, size checks, etc.) while
+   you are still working, so you can fix anything they catch:
    \`git add -A && git commit -m "${commitMessage || 'chore: complete task from plan'}"\`
-   If the commit fails (e.g. a pre-commit hook reports lint/format errors), read the hook output, fix the
-   reported issues, re-stage, and retry the commit yourself before giving up. Only report \`SUCCESS\` once the
-   commit has actually succeeded. Do not amend or rewrite prior commits, and do not push.
+   If git reports there is nothing to commit, that's fine. If the commit fails because a pre-commit hook
+   rejects it, read the hook output and make sure ALL of its checks pass — fix every reported issue
+   (not just the ones related to your own edits), re-stage, and retry the commit yourself. Do not give up
+   or report \`SUCCESS\` until the commit actually succeeds. Do not amend or rewrite prior commits, and do
+   not push.
 3. Do not mark the task as DONE in the plan file.
 4. Include a concise handoff note in the JSON \`result\` field, before the sentinel line. It is shown to the user in the run summary, so cover: what you changed (files/areas touched), how you verified it, and anything the next task or a human reviewer should know (deviations from the plan, follow-ups, open questions).
 5. You MUST end your JSON \`result\` field with exactly one of the following sentinels:
