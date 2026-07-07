@@ -8,6 +8,7 @@ import * as discovery from '../plans/discovery.js';
 import * as state from '../executor/state.js';
 import * as verification from '../executor/verification.js';
 import * as worktrees from '../worktrees/index.js';
+import * as commit from '../git/commit.js';
 import * as p from '@clack/prompts';
 
 vi.mock('fs');
@@ -18,6 +19,7 @@ vi.mock('../plans/discovery.js');
 vi.mock('../executor/state.js');
 vi.mock('../executor/verification.js');
 vi.mock('../worktrees/index.js');
+vi.mock('../git/commit.js');
 vi.mock('@clack/prompts', () => ({
   intro: vi.fn(),
   outro: vi.fn(),
@@ -59,6 +61,9 @@ describe('runCommand', () => {
     vi.mocked(verification.runVerification).mockResolvedValue(null);
     vi.mocked(worktrees.getWorktreeBranchName).mockReturnValue('plan1-2');
     vi.mocked(worktrees.createWorktree).mockResolvedValue(undefined);
+    vi.mocked(commit.stageAllChanges).mockResolvedValue(undefined);
+    vi.mocked(commit.hasStagedChanges).mockResolvedValue(false);
+    vi.mocked(commit.createCommit).mockResolvedValue('abc1234');
   });
 
   it('stops if no executable tasks are found', async () => {
