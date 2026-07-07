@@ -6,7 +6,7 @@ The core rule is:
 
 **Claude implements one selected task. The orchestrator owns lifecycle state.**
 
-Claude task sessions do not mark tasks `DONE`, do not commit, and do not decide whether work is complete. The orchestrator validates the plan, runs Claude headlessly, checks structured results, runs verification commands, updates task state, and commits only after verification passes.
+Claude task sessions commit their own work but do not mark tasks `DONE`, push, or decide whether work is complete. The orchestrator validates the plan, runs Claude headlessly, checks structured results, runs verification commands, updates task state, and only marks a task `DONE` after verification passes (falling back to its own commit if Claude's edits were somehow left uncommitted).
 
 ## Status
 
@@ -39,12 +39,11 @@ The intended workflow is:
 3. Validate the plan.
 4. Select one task.
 5. Create or reuse an isolated per-task Git worktree.
-6. Run Claude Code headlessly for that task.
+6. Run Claude Code headlessly for that task; Claude commits its own changes before finishing.
 7. Parse Claude's structured JSON result.
 8. Run verification commands.
-9. Mark the task `DONE` only if verification passes.
-10. Commit verified changes.
-11. Stop, resume later, or explicitly continue in loop mode.
+9. Mark the task `DONE` only if verification passes (falling back to a commit if Claude somehow left changes uncommitted).
+10. Stop, resume later, or explicitly continue in loop mode.
 
 ## Plan Format
 
@@ -162,7 +161,7 @@ Default behavior:
 - Enforce `taskTimeoutMs`.
 - Parse the sentinel from Claude's JSON `result`.
 - Run verification commands only after a `SUCCESS` sentinel.
-- Mark `DONE` and commit only after verification passes.
+- Mark `DONE` only after verification passes (Claude already committed its own changes; the orchestrator only commits as a fallback if something was left uncommitted).
 - Stop after one task.
 
 ### `claude-orchestrator run --loop`
@@ -297,7 +296,7 @@ The MVP safety model relies on real execution boundaries, not only prompt instru
 - `--dangerously-skip-permissions` is not allowed for normal execution.
 - Protected path patterns are checked before and after execution.
 - Destructive Git operations are blocked.
-- Claude task sessions do not commit, amend, push, force-push, reset, clean, rebase, delete branches, or rewrite history.
+- Claude task sessions commit their own work (and must fix any pre-commit hook failures before reporting success), but do not amend, push, force-push, reset, clean, rebase, delete branches, or otherwise rewrite history.
 - The orchestrator does not auto-push in the MVP.
 - Verification commands are structured and policy-checked.
 - Secret-looking values are redacted from logs.
