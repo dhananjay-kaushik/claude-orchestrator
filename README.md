@@ -230,6 +230,14 @@ Logs include:
 - command policy decisions
 - summary reports
 
+### `claude-orchestrator reset last-task`
+
+Reset the blocking failed task (out of retries) back to `NOT_DONE` so a fresh `run` can retry it.
+
+### `claude-orchestrator reset plan`
+
+Reset every task in a plan back to `NOT_DONE` and clear its execution state. Use this to restart a plan from scratch.
+
 ### Resuming interrupted work
 
 There is no separate `resume` command. An interrupted, `IN_PROGRESS`, or `BLOCKED: SESSION_LIMIT` task is just state on disk, so re-running `claude-orchestrator run --plan <path>` picks it back up automatically:
