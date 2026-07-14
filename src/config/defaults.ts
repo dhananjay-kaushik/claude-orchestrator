@@ -12,6 +12,10 @@ export const defaultConfig = {
     // Claude's default permission mode blocks Write/Edit waiting for interactive
     // approval that never comes, and the task gets marked BLOCKED.
     permissionMode: 'acceptEdits',
+    // ponytail: acceptEdits only covers Write/Edit, not Bash — without these,
+    // the commit step (git add/commit) hits the same never-answered approval
+    // gate and the task gets marked BLOCKED.
+    allowedTools: ['Bash(git add:*)', 'Bash(git commit:*)'],
   },
   taskTimeoutMs: 300000,
   verificationCommands: [],

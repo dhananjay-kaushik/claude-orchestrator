@@ -81,6 +81,18 @@ You are an Expert Node.js & TypeScript CLI Developer. Your goal is to build an i
    - Implement and document `init`, `doctor`, `validate`, `plan`, `run`, `status`, `logs`, and `resume` before adding polish features.
    - Notifications, webhooks, automatic resume after session reset, network-aware verification policy, and dangerous override modes are post-MVP.
 
+## Release / Push Strategy
+
+Default strategy whenever a fix or feature is ready to ship:
+
+1. Run `pnpm test` (and `pnpm typecheck` if touched) before committing.
+2. Commit the change, then bump the version with `npm version patch --no-git-tag-version` (bump `minor`/`major` instead when the change warrants it) and commit `package.json` alongside or with the fix.
+3. Push the current branch.
+4. Tag the commit `vX.Y.Z` (matching the new `package.json` version) and push the tag: `git push origin vX.Y.Z`.
+5. Pushing the tag triggers `.github/workflows/publish.yml`, which runs `pnpm test` and `pnpm publish` to npm — no manual publish step needed.
+
+Do this on whatever branch has the fix; the publish workflow triggers on tag push regardless of branch. Never reuse an existing version tag.
+
 ## Workflow Adherence
 
 - When asked to implement a feature for this project, always refer to `PLAN.md` first.
