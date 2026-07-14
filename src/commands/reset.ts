@@ -49,16 +49,16 @@ export async function runResetLastTaskCommand(options: ResetCommandOptions): Pro
   if (!resolved) return;
   const { planPath, planContent, parsedPlan } = resolved;
 
-  const failedTask = parsedPlan.tasks.find((t) => t.status === 'FAILED');
+  const failedTask = parsedPlan.tasks.find((t) => t.status === 'FAILED' || t.status === 'BLOCKED');
   if (!failedTask) {
-    p.outro(pc.yellow('No failed task found in this plan.'));
+    p.outro(pc.yellow('No failed or blocked task found in this plan.'));
     return;
   }
 
   const state = await loadPlanState(parsedPlan.planId, config);
   const taskState = state.tasks[failedTask.id];
 
-  p.log.info(pc.blue('--- Failed Task ---'));
+  p.log.info(pc.blue(`--- ${failedTask.status === 'BLOCKED' ? 'Blocked' : 'Failed'} Task ---`));
   p.log.info(`Task:      ${failedTask.originalText.trim()}`);
   p.log.info(`Heading:   ${failedTask.headingContext}`);
   p.log.info(`Attempts:  ${taskState?.attempts ?? 0} / ${config.maxRetries || 3}`);
